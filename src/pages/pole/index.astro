@@ -112,9 +112,16 @@ const calendarEvents = [
 				</div>
 				<div class="calendar-grid" data-calendar-grid></div>
 			</div>
+
+			<div class="day-popover" data-day-popover hidden>
+				<div class="day-popover-panel" role="dialog" aria-modal="true" aria-labelledby="day-popover-title">
+					<button class="day-popover-close" type="button" data-day-popover-close aria-label="Close">×</button>
+					<p class="day-popover-date" id="day-popover-title" data-day-popover-date></p>
+					<div class="day-popover-events" data-day-popover-events></div>
+				</div>
+			</div>
 		</section>
 	</main>
-</Layout>
 
 <script type="application/json" id="calendar-events" set:html={JSON.stringify(calendarEvents)} />
 
@@ -125,6 +132,10 @@ const calendarEvents = [
 	const calendarTitle = document.querySelector('[data-calendar-title]');
 	const prevButton = document.querySelector('[data-calendar-prev]');
 	const nextButton = document.querySelector('[data-calendar-next]');
+	const dayPopover = document.querySelector('[data-day-popover]');
+	const dayPopoverDate = document.querySelector('[data-day-popover-date]');
+	const dayPopoverEvents = document.querySelector('[data-day-popover-events]');
+	const dayPopoverClose = document.querySelector('[data-day-popover-close]');
 	const rawEvents = eventScript ? JSON.parse(eventScript.textContent || '[]') : [];
 	const typeLabels = {
 		competition: 'Competition',
@@ -142,6 +153,15 @@ const calendarEvents = [
 		const month = `${date.getMonth() + 1}`.padStart(2, '0');
 		const day = `${date.getDate()}`.padStart(2, '0');
 		return `${year}-${month}-${day}`;
+	};
+
+	const formatPopoverDate = (date) => {
+		return new Intl.DateTimeFormat('zh-TW', {
+			year: 'numeric',
+			month: 'long',
+			day: 'numeric',
+			weekday: 'long',
+		}).format(parseLocalDate(date));
 	};
 
 	const expandedEvents = rawEvents.flatMap((event) => {
@@ -182,6 +202,41 @@ const calendarEvents = [
 		month: 'long',
 	});
 
+	function closeDayPopover() {
+		if (!dayPopover) {
+			return;
+		}
+
+		dayPopover.hidden = true;
+	}
+
+	function showDayPopover(date, events) {
+		if (!dayPopover || !dayPopoverDate || !dayPopoverEvents) {
+			return;
+		}
+
+		dayPopoverDate.textContent = formatPopoverDate(date);
+		dayPopoverEvents.innerHTML = '';
+
+		for (const event of events) {
+			const card = document.createElement('article');
+			card.className = `popover-event ${event.type}`;
+
+			const titleLink = document.createElement('a');
+			titleLink.className = 'popover-event-title';
+			titleLink.href = event.href;
+			titleLink.textContent = event.title;
+
+			const meta = document.createElement('p');
+			meta.textContent = [typeLabels[event.type], event.location, event.hours].filter(Boolean).join(' · ');
+
+			card.append(titleLink, meta);
+			dayPopoverEvents.append(card);
+		}
+
+		dayPopover.hidden = false;
+	}
+
 	function renderCalendar() {
 		if (!calendarRoot || !calendarGrid || !calendarTitle || !prevButton || !nextButton) {
 			return;
@@ -191,9 +246,10 @@ const calendarEvents = [
 		const [year, month] = activeMonth.split('-').map(Number);
 		const firstDay = new Date(year, month - 1, 1);
 		const lastDay = new Date(year, month, 0);
-		const totalCells = Math.ceil((firstDay.getDay() + lastDay.getDate()) / 7) * 7;
+		const totalCells = 42;
 		const titleDate = new Date(year, month - 1, 1);
 
+		closeDayPopover();
 		calendarTitle.textContent = monthFormatter.format(titleDate);
 		prevButton.disabled = activeMonthIndex === 0;
 		nextButton.disabled = activeMonthIndex === monthKeys.length - 1;
@@ -222,16 +278,25 @@ const calendarEvents = [
 			eventList.className = 'day-events';
 
 			for (const event of dayEvents) {
-				const link = document.createElement('a');
-				link.className = `day-event ${event.type}`;
-				link.href = event.href;
-				link.title = `${typeLabels[event.type]} · ${event.title}`;
-				link.innerHTML = `
-					<span class="event-dot"></span>
-					<span class="event-title">${event.title}</span>
-					<span class="event-meta">${[event.location, event.hours].filter(Boolean).join(' · ')}</span>
-				`;
-				eventList.append(link);
+				const button = document.createElement('button');
+				button.type = 'button';
+				button.className = `day-event ${event.type}`;
+				button.title = `${typeLabels[event.type]} · ${event.title}`;
+				button.addEventListener('click', () => showDayPopover(key, dayEvents));
+
+				const dot = document.createElement('span');
+				dot.className = 'event-dot';
+
+				const title = document.createElement('span');
+				title.className = 'event-title';
+				title.textContent = event.title;
+
+				const meta = document.createElement('span');
+				meta.className = 'event-meta';
+				meta.textContent = [event.location, event.hours].filter(Boolean).join(' · ');
+
+				button.append(dot, title, meta);
+				eventList.append(button);
 			}
 
 			cell.append(eventList);
@@ -249,8 +314,23 @@ const calendarEvents = [
 		renderCalendar();
 	});
 
+	dayPopoverClose?.addEventListener('click', closeDayPopover);
+
+	dayPopover?.addEventListener('click', (event) => {
+		if (event.target === dayPopover) {
+			closeDayPopover();
+		}
+	});
+
+	document.addEventListener('keydown', (event) => {
+		if (event.key === 'Escape') {
+			closeDayPopover();
+		}
+	});
+
 	renderCalendar();
 </script>
+</Layout>
 
 <style>
 	.pole-home {
@@ -297,6 +377,7 @@ const calendarEvents = [
 
 	.grid a {
 		border: 1px solid #d8d1c1;
+		border-radius: 18px;
 		padding: 22px;
 		background: #fffdf8;
 		color: #171717;
@@ -350,6 +431,7 @@ const calendarEvents = [
 
 	.legend span {
 		border: 1px solid #171717;
+		border-radius: 999px;
 		padding: 7px 10px;
 		font-size: 0.78rem;
 		font-weight: 900;
@@ -358,7 +440,9 @@ const calendarEvents = [
 
 	.calendar-shell {
 		border: 1px solid #d8d1c1;
+		border-radius: 22px;
 		background: #fffdf8;
+		overflow: hidden;
 	}
 
 	.calendar-toolbar {
@@ -394,6 +478,7 @@ const calendarEvents = [
 	.calendar-grid {
 		display: grid;
 		grid-template-columns: repeat(7, minmax(0, 1fr));
+		grid-template-rows: repeat(6, minmax(118px, 1fr));
 	}
 
 	.weekday-row span {
@@ -409,7 +494,7 @@ const calendarEvents = [
 	.day-cell {
 		display: grid;
 		grid-template-rows: auto minmax(72px, 1fr);
-		min-height: 136px;
+		min-height: 118px;
 		border-right: 1px solid #e4ddcf;
 		border-bottom: 1px solid #e4ddcf;
 		padding: 8px;
@@ -443,10 +528,14 @@ const calendarEvents = [
 		gap: 6px;
 		align-items: start;
 		border: 1px solid #e2d9c8;
+		border-radius: 10px;
 		padding: 6px;
 		background: #fffdf8;
 		color: #171717;
+		cursor: pointer;
+		font: inherit;
 		text-decoration: none;
+		text-align: left;
 	}
 
 	.event-dot {
@@ -499,13 +588,110 @@ const calendarEvents = [
 		outline-offset: 0;
 	}
 
+	.day-popover {
+		position: fixed;
+		inset: 0;
+		z-index: 20;
+		display: grid;
+		place-items: center;
+		padding: 24px;
+		background: rgba(23, 23, 23, 0.28);
+	}
+
+	.day-popover[hidden] {
+		display: none;
+	}
+
+	.day-popover-panel {
+		position: relative;
+		width: min(100%, 520px);
+		max-height: min(680px, calc(100svh - 48px));
+		overflow: auto;
+		border: 1px solid #d8d1c1;
+		border-radius: 24px;
+		padding: 22px;
+		background: #fffdf8;
+		box-shadow: 0 24px 70px rgba(23, 23, 23, 0.22);
+	}
+
+	.day-popover-close {
+		position: absolute;
+		top: 14px;
+		right: 14px;
+		width: 34px;
+		height: 34px;
+		border: 1px solid #d8d1c1;
+		border-radius: 50%;
+		background: #f7f5ef;
+		color: #171717;
+		cursor: pointer;
+		font-size: 1.35rem;
+		font-weight: 900;
+		line-height: 1;
+	}
+
+	.day-popover-date {
+		margin: 0 42px 16px 0;
+		color: #5f6258;
+		font-size: 0.92rem;
+		font-weight: 900;
+	}
+
+	.day-popover-events {
+		display: grid;
+		gap: 10px;
+	}
+
+	.popover-event {
+		border-left: 6px solid #171717;
+		border-radius: 16px;
+		padding: 14px 16px;
+		background: #f7f5ef;
+	}
+
+	.popover-event.competition {
+		border-color: #d94f30;
+	}
+
+	.popover-event.practice {
+		border-color: #2f6f73;
+	}
+
+	.popover-event.event {
+		border-color: #6b5bbd;
+	}
+
+	.popover-event-title {
+		display: block;
+		color: #171717;
+		font-size: 1.05rem;
+		font-weight: 950;
+		line-height: 1.35;
+		text-decoration: none;
+	}
+
+	.popover-event-title:hover,
+	.popover-event-title:focus-visible {
+		text-decoration: underline;
+		text-decoration-thickness: 2px;
+		text-underline-offset: 4px;
+	}
+
+	.popover-event p {
+		margin: 6px 0 0;
+		color: #656258;
+		font-size: 0.86rem;
+		font-weight: 750;
+		line-height: 1.45;
+	}
+
 	@media (max-width: 720px) {
 		.grid {
 			grid-template-columns: 1fr;
 		}
 
 		.day-cell {
-			min-height: 112px;
+			min-height: 104px;
 			padding: 6px;
 		}
 
@@ -529,7 +715,7 @@ const calendarEvents = [
 		}
 
 		.day-cell {
-			min-height: 76px;
+			min-height: 72px;
 			padding: 5px;
 		}
 
