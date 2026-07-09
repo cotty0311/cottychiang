@@ -30,7 +30,8 @@ const practiceEvents = readCsv(practiceRecordsCsv).map((record) => ({
 	type: 'practice',
 	date: record.date,
 	title: record.title || '練習紀錄',
-	meta: [record.location, record.duration ? `${record.duration} hr` : ''].filter(Boolean).join(' · '),
+	location: record.location,
+	hours: record.duration ? `${record.duration} hr` : '',
 	href: `/pole/practice/#practice-${record.date}`,
 }));
 
@@ -39,14 +40,16 @@ const calendarEvents = [
 		type: 'competition',
 		date: '2025-03-29',
 		title: 'PSO 2025',
-		meta: '臺灣圖書館 · 4/11',
+		location: '臺灣圖書館',
+		hours: '',
 		href: '/pole/competition/pso2025/',
 	},
 	{
 		type: 'competition',
 		date: '2026-03-07',
 		title: 'PSO 2026',
-		meta: '臺灣戲曲學院 · 3/4',
+		location: '臺灣戲曲學院',
+		hours: '',
 		href: '/pole/competition/pso2026/',
 	},
 	{
@@ -54,42 +57,12 @@ const calendarEvents = [
 		date: '2025-07-02',
 		endDate: '2025-07-05',
 		title: 'Dazzling pole camp',
-		meta: '2025.07.02 - 2025.07.05',
+		location: '',
+		hours: '',
 		href: '/pole/event/#dazzling-pole-camp',
 	},
 	...practiceEvents,
 ].sort((a, b) => b.date.localeCompare(a.date));
-
-const monthFormatter = new Intl.DateTimeFormat('zh-TW', {
-	year: 'numeric',
-	month: 'long',
-});
-
-const dateFormatter = new Intl.DateTimeFormat('zh-TW', {
-	month: '2-digit',
-	day: '2-digit',
-	weekday: 'short',
-});
-
-const typeLabels = {
-	competition: 'Competition',
-	practice: 'Practice',
-	event: 'Event',
-};
-
-const monthGroups = [...calendarEvents.reduce((groups, event) => {
-	const month = event.date.slice(0, 7);
-	groups.set(month, [...(groups.get(month) ?? []), event]);
-	return groups;
-}, new Map<string, typeof calendarEvents>()).entries()].sort(([a], [b]) => b.localeCompare(a));
-
-function formatDate(date: string) {
-	return dateFormatter.format(new Date(`${date}T00:00:00`));
-}
-
-function formatMonth(month: string) {
-	return monthFormatter.format(new Date(`${month}-01T00:00:00`));
-}
 ---
 
 <Layout title="Pole | Cotty Chiang" description="Cotty Chiang 的鋼管紀錄。">
@@ -122,28 +95,162 @@ function formatMonth(month: string) {
 				<span class="event">Event</span>
 			</div>
 
-			<div class="months">
-				{monthGroups.map(([month, events]) => (
-					<section class="month">
-						<h3>{formatMonth(month)}</h3>
-						<div class="event-list">
-							{events.map((event) => (
-								<a class={`calendar-item ${event.type}`} href={event.href}>
-									<time datetime={event.date}>
-										{formatDate(event.date)}
-										{event.endDate ? ` - ${formatDate(event.endDate)}` : ''}
-									</time>
-									<span>{event.title}</span>
-									<small>{typeLabels[event.type]}{event.meta ? ` · ${event.meta}` : ''}</small>
-								</a>
-							))}
-						</div>
-					</section>
-				))}
+			<div class="calendar-shell" data-calendar>
+				<div class="calendar-toolbar">
+					<button type="button" data-calendar-prev aria-label="Previous month">‹</button>
+					<h3 data-calendar-title></h3>
+					<button type="button" data-calendar-next aria-label="Next month">›</button>
+				</div>
+				<div class="weekday-row" aria-hidden="true">
+					<span>Sun</span>
+					<span>Mon</span>
+					<span>Tue</span>
+					<span>Wed</span>
+					<span>Thu</span>
+					<span>Fri</span>
+					<span>Sat</span>
+				</div>
+				<div class="calendar-grid" data-calendar-grid></div>
 			</div>
 		</section>
 	</main>
 </Layout>
+
+<script type="application/json" id="calendar-events" set:html={JSON.stringify(calendarEvents)} />
+
+<script>
+	const eventScript = document.getElementById('calendar-events');
+	const calendarRoot = document.querySelector('[data-calendar]');
+	const calendarGrid = document.querySelector('[data-calendar-grid]');
+	const calendarTitle = document.querySelector('[data-calendar-title]');
+	const prevButton = document.querySelector('[data-calendar-prev]');
+	const nextButton = document.querySelector('[data-calendar-next]');
+	const rawEvents = eventScript ? JSON.parse(eventScript.textContent || '[]') : [];
+	const typeLabels = {
+		competition: 'Competition',
+		practice: 'Practice',
+		event: 'Event',
+	};
+
+	const parseLocalDate = (date) => {
+		const [year, month, day] = date.split('-').map(Number);
+		return new Date(year, month - 1, day);
+	};
+
+	const toKey = (date) => {
+		const year = date.getFullYear();
+		const month = `${date.getMonth() + 1}`.padStart(2, '0');
+		const day = `${date.getDate()}`.padStart(2, '0');
+		return `${year}-${month}-${day}`;
+	};
+
+	const expandedEvents = rawEvents.flatMap((event) => {
+		if (!event.endDate) {
+			return [event];
+		}
+
+		const dates = [];
+		const cursor = parseLocalDate(event.date);
+		const end = parseLocalDate(event.endDate);
+
+		while (cursor <= end) {
+			dates.push({ ...event, date: toKey(cursor) });
+			cursor.setDate(cursor.getDate() + 1);
+		}
+
+		return dates;
+	});
+
+	const eventsByDate = expandedEvents.reduce((groups, event) => {
+		groups[event.date] = [...(groups[event.date] || []), event];
+		return groups;
+	}, {});
+
+	const monthKeys = [];
+	const monthCursor = parseLocalDate(expandedEvents.map((event) => event.date).sort()[0]);
+	const lastEventDate = parseLocalDate(expandedEvents.map((event) => event.date).sort().at(-1));
+	monthCursor.setDate(1);
+
+	while (monthCursor <= lastEventDate) {
+		monthKeys.push(`${monthCursor.getFullYear()}-${`${monthCursor.getMonth() + 1}`.padStart(2, '0')}`);
+		monthCursor.setMonth(monthCursor.getMonth() + 1);
+	}
+
+	let activeMonthIndex = Math.max(0, monthKeys.length - 1);
+	const monthFormatter = new Intl.DateTimeFormat('zh-TW', {
+		year: 'numeric',
+		month: 'long',
+	});
+
+	function renderCalendar() {
+		if (!calendarRoot || !calendarGrid || !calendarTitle || !prevButton || !nextButton) {
+			return;
+		}
+
+		const activeMonth = monthKeys[activeMonthIndex];
+		const [year, month] = activeMonth.split('-').map(Number);
+		const firstDay = new Date(year, month - 1, 1);
+		const lastDay = new Date(year, month, 0);
+		const totalCells = Math.ceil((firstDay.getDay() + lastDay.getDate()) / 7) * 7;
+		const titleDate = new Date(year, month - 1, 1);
+
+		calendarTitle.textContent = monthFormatter.format(titleDate);
+		prevButton.disabled = activeMonthIndex === 0;
+		nextButton.disabled = activeMonthIndex === monthKeys.length - 1;
+		calendarGrid.innerHTML = '';
+
+		for (let index = 0; index < totalCells; index += 1) {
+			const dayNumber = index - firstDay.getDay() + 1;
+			const cell = document.createElement('div');
+			cell.className = 'day-cell';
+
+			if (dayNumber < 1 || dayNumber > lastDay.getDate()) {
+				cell.classList.add('is-empty');
+				calendarGrid.append(cell);
+				continue;
+			}
+
+			const date = new Date(year, month - 1, dayNumber);
+			const key = toKey(date);
+			const dayEvents = eventsByDate[key] || [];
+			const dayLabel = document.createElement('time');
+			dayLabel.dateTime = key;
+			dayLabel.textContent = `${dayNumber}`;
+			cell.append(dayLabel);
+
+			const eventList = document.createElement('div');
+			eventList.className = 'day-events';
+
+			for (const event of dayEvents) {
+				const link = document.createElement('a');
+				link.className = `day-event ${event.type}`;
+				link.href = event.href;
+				link.title = `${typeLabels[event.type]} · ${event.title}`;
+				link.innerHTML = `
+					<span class="event-dot"></span>
+					<span class="event-title">${event.title}</span>
+					<span class="event-meta">${[event.location, event.hours].filter(Boolean).join(' · ')}</span>
+				`;
+				eventList.append(link);
+			}
+
+			cell.append(eventList);
+			calendarGrid.append(cell);
+		}
+	}
+
+	prevButton?.addEventListener('click', () => {
+		activeMonthIndex = Math.max(0, activeMonthIndex - 1);
+		renderCalendar();
+	});
+
+	nextButton?.addEventListener('click', () => {
+		activeMonthIndex = Math.min(monthKeys.length - 1, activeMonthIndex + 1);
+		renderCalendar();
+	});
+
+	renderCalendar();
+</script>
 
 <style>
 	.pole-home {
@@ -249,78 +356,144 @@ function formatMonth(month: string) {
 		text-transform: uppercase;
 	}
 
-	.months {
-		display: grid;
-		gap: 18px;
-	}
-
-	.month {
-		display: grid;
-		grid-template-columns: 180px minmax(0, 1fr);
-		gap: 16px;
+	.calendar-shell {
 		border: 1px solid #d8d1c1;
 		background: #fffdf8;
-		padding: 16px;
+	}
+
+	.calendar-toolbar {
+		display: grid;
+		grid-template-columns: 44px minmax(0, 1fr) 44px;
+		align-items: center;
+		border-bottom: 1px solid #d8d1c1;
+	}
+
+	.calendar-toolbar button {
+		width: 44px;
+		height: 44px;
+		border: 0;
+		background: #171717;
+		color: #fff;
+		cursor: pointer;
+		font-size: 1.6rem;
+		font-weight: 900;
+	}
+
+	.calendar-toolbar button:disabled {
+		cursor: not-allowed;
+		opacity: 0.35;
 	}
 
 	h3 {
-		position: sticky;
-		top: 16px;
-		align-self: start;
 		margin: 0;
-		font-size: 1.15rem;
+		font-size: 1.2rem;
+		text-align: center;
 	}
 
-	.event-list {
+	.weekday-row,
+	.calendar-grid {
 		display: grid;
-		grid-template-columns: repeat(2, minmax(0, 1fr));
-		gap: 10px;
+		grid-template-columns: repeat(7, minmax(0, 1fr));
 	}
 
-	.calendar-item {
+	.weekday-row span {
+		border-bottom: 1px solid #d8d1c1;
+		padding: 10px 8px;
+		color: #68655d;
+		font-size: 0.76rem;
+		font-weight: 900;
+		text-align: center;
+		text-transform: uppercase;
+	}
+
+	.day-cell {
 		display: grid;
-		gap: 7px;
-		border-left: 6px solid #171717;
-		padding: 13px 14px;
+		grid-template-rows: auto minmax(72px, 1fr);
+		min-height: 136px;
+		border-right: 1px solid #e4ddcf;
+		border-bottom: 1px solid #e4ddcf;
+		padding: 8px;
 		background: #f7f5ef;
-		color: #171717;
-		text-decoration: none;
 	}
 
-	.calendar-item time {
+	.day-cell:nth-child(7n) {
+		border-right: 0;
+	}
+
+	.day-cell.is-empty {
+		background: #f0ebe0;
+	}
+
+	.day-cell time {
 		color: #5f6258;
 		font-size: 0.82rem;
 		font-weight: 850;
 	}
 
-	.calendar-item span {
+	.day-events {
+		display: grid;
+		align-content: start;
+		gap: 6px;
+		margin-top: 8px;
+	}
+
+	.day-event {
+		display: grid;
+		grid-template-columns: 8px minmax(0, 1fr);
+		gap: 6px;
+		align-items: start;
+		border: 1px solid #e2d9c8;
+		padding: 6px;
+		background: #fffdf8;
+		color: #171717;
+		text-decoration: none;
+	}
+
+	.event-dot {
+		width: 8px;
+		aspect-ratio: 1;
+		border-radius: 50%;
+		margin-top: 0.35em;
+		background: #171717;
+	}
+
+	.event-title {
+		overflow: hidden;
+		font-size: 0.82rem;
 		font-weight: 900;
-		line-height: 1.35;
+		line-height: 1.25;
+		text-overflow: ellipsis;
+		white-space: nowrap;
 	}
 
-	.calendar-item small {
+	.event-meta {
+		grid-column: 2;
+		overflow: hidden;
 		color: #656258;
-		font-size: 0.86rem;
-		line-height: 1.45;
+		font-size: 0.74rem;
+		font-weight: 700;
+		line-height: 1.25;
+		text-overflow: ellipsis;
+		white-space: nowrap;
 	}
 
-	.calendar-item.competition,
+	.day-event.competition .event-dot,
 	.legend .competition {
-		border-color: #d94f30;
+		background: #d94f30;
 	}
 
-	.calendar-item.practice,
+	.day-event.practice .event-dot,
 	.legend .practice {
-		border-color: #2f6f73;
+		background: #2f6f73;
 	}
 
-	.calendar-item.event,
+	.day-event.event .event-dot,
 	.legend .event {
-		border-color: #6b5bbd;
+		background: #6b5bbd;
 	}
 
-	.calendar-item:hover,
-	.calendar-item:focus-visible {
+	.day-event:hover,
+	.day-event:focus-visible {
 		background: #fff;
 		outline: 2px solid #171717;
 		outline-offset: 0;
@@ -331,9 +504,57 @@ function formatMonth(month: string) {
 			grid-template-columns: 1fr;
 		}
 
-		.month,
-		.event-list {
-			grid-template-columns: 1fr;
+		.day-cell {
+			min-height: 112px;
+			padding: 6px;
+		}
+
+		.event-meta {
+			display: none;
+		}
+
+		.day-event {
+			grid-template-columns: 7px minmax(0, 1fr);
+			padding: 5px;
+		}
+	}
+
+	@media (max-width: 460px) {
+		.weekday-row span {
+			font-size: 0;
+		}
+
+		.weekday-row span::first-letter {
+			font-size: 0.72rem;
+		}
+
+		.day-cell {
+			min-height: 76px;
+			padding: 5px;
+		}
+
+		.day-events {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 4px;
+		}
+
+		.day-event {
+			display: block;
+			border: 0;
+			padding: 0;
+			background: transparent;
+		}
+
+		.event-dot {
+			display: block;
+			width: 7px;
+			margin: 0;
+		}
+
+		.event-title,
+		.event-meta {
+			display: none;
 		}
 	}
 </style>

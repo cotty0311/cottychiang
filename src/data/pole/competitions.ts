@@ -1,5 +1,5 @@
 const MEDIA_BASE_URL = 'https://media.cottychiang.com';
-const COMPETITION_PHOTO_BASE = `${MEDIA_BASE_URL}/photos/pole/competion`;
+const COMPETITION_PHOTO_BASE = `${MEDIA_BASE_URL}/photos/pole/competition`;
 
 const pso2025Photos = [
 	'107B - Cotty - 2025 Taiwan - 0135.jpg',
