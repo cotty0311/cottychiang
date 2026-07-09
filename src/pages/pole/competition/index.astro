@@ -1,57 +1,8 @@
 ---
-import { readdirSync } from 'node:fs';
-import { join } from 'node:path';
 import Layout from '../../../layouts/Layout.astro';
+import { competitions as competitionData } from '../../../data/pole/competitions';
 
-function getCompetitionPhotos(id: string) {
-	const directory = join(process.cwd(), 'public', 'pole', 'competition', id);
-
-	return readdirSync(directory)
-		.filter((file) => /\.(jpe?g|png|webp|avif)$/i.test(file))
-		.sort((a, b) => a.localeCompare(b, 'zh-Hant'))
-		.map((file) => ({
-			src: `/pole/competition/${id}/${file}`,
-			alt: `${id} competition photo`,
-		}));
-}
-
-const competitions = [
-	{
-		id: 'pso2025',
-		name: 'PSO 2025',
-		date: '2025.03.29',
-		place: '臺灣圖書館',
-		rank: '4/11',
-		videoUrl: 'https://www.youtube.com/embed/I5i0YMBCo5I',
-		reflection: '第一次，很有趣。',
-		expenses: [
-			{ category: '私人課', amount: 11200, color: '#d94f30' },
-			{ category: '治裝費', amount: 5124, color: '#2f6f73' },
-			{ category: '娛樂費', amount: 320, color: '#e5b742' },
-			{ category: '租管', amount: 6740, color: '#6b5bbd' },
-			{ category: '報名費', amount: 7666, color: '#cc6f98' },
-			{ category: '維修費', amount: 5300, color: '#557a2f' },
-		],
-	},
-	{
-		id: 'pso2026',
-		name: 'PSO 2026',
-		date: '2026.03.07',
-		place: '臺灣戲曲學院',
-		rank: '3/4',
-		videoUrl: 'https://www.youtube.com/embed/LUEY74s_6nA',
-		reflection: '第二次，很好玩。',
-		expenses: [
-			{ category: '私人課', amount: 16000, color: '#d94f30' },
-			{ category: '租管', amount: 11675, color: '#2f6f73' },
-			{ category: '報名費', amount: 8840, color: '#6b5bbd' },
-			{ category: '治裝費', amount: 3450, color: '#cc6f98' },
-			{ category: '道具費', amount: 1525, color: '#e5b742' },
-			{ category: '鋼管週邊', amount: 453, color: '#557a2f' },
-			{ category: '交通費', amount: 230, color: '#7a6251' },
-		],
-	},
-].map((competition) => {
+const competitions = competitionData.map((competition) => {
 	const total = competition.expenses.reduce((sum, item) => sum + item.amount, 0);
 	let start = 0;
 	const gradient = competition.expenses
@@ -68,7 +19,6 @@ const competitions = [
 		...competition,
 		total,
 		topExpense,
-		photos: getCompetitionPhotos(competition.id),
 		pieStyle: `background: conic-gradient(${gradient});`,
 	};
 });
