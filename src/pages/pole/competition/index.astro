@@ -1,29 +1,6 @@
 ---
 import Layout from '../../../layouts/Layout.astro';
-import { competitions as competitionData } from '../../../data/pole/competitions';
-
-const competitions = competitionData.map((competition) => {
-	const total = competition.expenses.reduce((sum, item) => sum + item.amount, 0);
-	let start = 0;
-	const gradient = competition.expenses
-		.map((item) => {
-			const end = start + (item.amount / total) * 100;
-			const stop = `${item.color} ${start.toFixed(2)}% ${end.toFixed(2)}%`;
-			start = end;
-			return stop;
-		})
-		.join(', ');
-	const topExpense = [...competition.expenses].sort((a, b) => b.amount - a.amount)[0];
-
-	return {
-		...competition,
-		total,
-		topExpense,
-		pieStyle: `background: conic-gradient(${gradient});`,
-	};
-});
-
-const formatMoney = (amount: number) => `NT$${amount.toLocaleString('zh-TW')}`;
+import { competitions } from '../../../data/pole/competitions';
 ---
 
 <Layout title="Pole Competition | Cotty Chiang" description="Cotty Chiang 的鋼管比賽紀錄。">
@@ -32,90 +9,33 @@ const formatMoney = (amount: number) => `NT$${amount.toLocaleString('zh-TW')}`;
 			<a class="back" href="/pole/">Pole</a>
 			<p class="eyebrow">Competition</p>
 			<h1>比賽紀錄</h1>
-			<p>PSO 2025 與 PSO 2026 的影片、照片、基本資訊、心得和花費分析。</p>
+			<p>點進每張比賽卡，看影片、照片、資訊、心得和花費分析。</p>
 		</header>
 
-		{competitions.map((competition) => (
-			<article class="competition" id={competition.id}>
-				<header class="competition-header">
-					<div>
-						<p class="label">{competition.id}</p>
-						<h2>{competition.name}</h2>
-					</div>
-					<dl class="facts">
-						<div>
-							<dt>時間</dt>
-							<dd>{competition.date}</dd>
-						</div>
-						<div>
-							<dt>地點</dt>
-							<dd>{competition.place}</dd>
-						</div>
-						<div>
-							<dt>名次</dt>
-							<dd>{competition.rank}</dd>
-						</div>
-					</dl>
-				</header>
-
-				<section class="media-section" aria-labelledby={`${competition.id}-video`}>
-					<h3 id={`${competition.id}-video`}>比賽影片</h3>
-					<div class="video-placeholder">
-						{competition.videoUrl ? (
-							<iframe
-								src={competition.videoUrl}
-								title={`${competition.name} YouTube video`}
-								allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-								allowfullscreen
-							></iframe>
-						) : (
-							<p>YouTube 影片待補</p>
-						)}
-					</div>
-				</section>
-
-				<section class="media-section" aria-labelledby={`${competition.id}-photos`}>
-					<h3 id={`${competition.id}-photos`}>比賽照片</h3>
-					<div class="photo-grid">
-						{competition.photos.map((photo, index) => (
-							<a class="photo-link" href={photo.src} target="_blank">
-								<img src={photo.src} alt={`${photo.alt} ${index + 1}`} loading="lazy" />
-							</a>
+		<section class="cards" aria-label="Competition list">
+			{competitions.map((competition) => (
+				<a class="competition-card" href={`/pole/competition/${competition.id}/`}>
+					<div class="slideshow" aria-hidden="true">
+						{competition.featuredPhotos.map((photo, index) => (
+							<img
+								src={photo.src}
+								alt=""
+								loading={index === 0 ? 'eager' : 'lazy'}
+								style={`--index: ${index}; --count: ${competition.featuredPhotos.length};`}
+							/>
 						))}
+						{competition.medal === 'bronze' && <span class="medal">銅牌</span>}
 					</div>
-				</section>
-
-				<section class="reflection" aria-labelledby={`${competition.id}-reflection`}>
-					<h3 id={`${competition.id}-reflection`}>比賽心得</h3>
-					<p>{competition.reflection}</p>
-				</section>
-
-				<section class="expenses" aria-labelledby={`${competition.id}-expenses`}>
-					<div>
-						<h3 id={`${competition.id}-expenses`}>花費分析</h3>
-						<p>
-							總花費 {formatMoney(competition.total)}，最高項目是
-							<strong>{competition.topExpense.category}</strong>
-							（{formatMoney(competition.topExpense.amount)}）。
-						</p>
-					</div>
-					<div class="chart-wrap">
-						<div class="pie" style={competition.pieStyle}>
-							<span>{formatMoney(competition.total)}</span>
+					<div class="card-body">
+						<div>
+							<p>{competition.id}</p>
+							<h2>{competition.name}</h2>
 						</div>
-						<ul class="legend">
-							{competition.expenses.map((item) => (
-								<li>
-									<span style={`background: ${item.color};`}></span>
-									<b>{item.category}</b>
-									<em>{formatMoney(item.amount)}</em>
-								</li>
-							))}
-						</ul>
+						<time>{competition.date}</time>
 					</div>
-				</section>
-			</article>
-		))}
+				</a>
+			))}
+		</section>
 	</main>
 </Layout>
 
@@ -136,207 +56,137 @@ const formatMoney = (amount: number) => `NT$${amount.toLocaleString('zh-TW')}`;
 		padding: 72px 0 42px;
 	}
 
-	.eyebrow,
-	.label {
+	.eyebrow {
 		color: #b5422a;
 		font-weight: 850;
 		text-transform: uppercase;
 	}
 
-	.hero h1 {
+	h1 {
 		margin: 0;
 		font-size: clamp(3.4rem, 10vw, 7.5rem);
 		line-height: 0.95;
 	}
 
-	.hero p,
-	.reflection p,
-	.expenses p {
+	.hero p {
 		max-width: 720px;
 		color: #3d3d38;
 		font-size: 1.1rem;
 		line-height: 1.75;
 	}
 
-	.competition {
-		border-top: 2px solid #171717;
-		padding: 38px 0 72px;
+	.cards {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 18px;
 	}
 
-	.competition-header {
+	.competition-card {
 		display: grid;
-		grid-template-columns: minmax(0, 1fr) minmax(320px, 0.8fr);
-		gap: 28px;
-		align-items: start;
+		overflow: hidden;
+		border: 1px solid #d8d1c1;
+		background: #fffdf8;
+		color: #171717;
+		text-decoration: none;
+	}
+
+	.slideshow {
+		position: relative;
+		aspect-ratio: 4 / 5;
+		overflow: hidden;
+		background: #26251f;
+	}
+
+	.slideshow img {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		opacity: 0;
+		animation: fade-photo calc(var(--count) * 3s) linear infinite;
+		animation-delay: calc(var(--index) * 3s);
+	}
+
+	@keyframes fade-photo {
+		0%,
+		100% {
+			opacity: 0;
+		}
+
+		5%,
+		16% {
+			opacity: 1;
+		}
+
+		22% {
+			opacity: 0;
+		}
+	}
+
+	.medal {
+		position: absolute;
+		top: 16px;
+		right: 16px;
+		z-index: 1;
+		border: 1px solid rgba(40, 27, 18, 0.35);
+		border-radius: 999px;
+		padding: 8px 12px;
+		background: #b87333;
+		color: #fff8ec;
+		font-size: 0.88rem;
+		font-weight: 950;
+		box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
+	}
+
+	.card-body {
+		display: flex;
+		gap: 18px;
+		align-items: end;
+		justify-content: space-between;
+		padding: 18px;
+	}
+
+	.card-body p {
+		margin: 0 0 8px;
+		color: #b5422a;
+		font-size: 0.82rem;
+		font-weight: 850;
+		text-transform: uppercase;
 	}
 
 	h2 {
 		margin: 0;
-		font-size: clamp(2.4rem, 6vw, 4.5rem);
+		font-size: clamp(1.8rem, 4vw, 3rem);
 		line-height: 1;
 	}
 
-	h3 {
-		margin: 0 0 16px;
-		font-size: 1.25rem;
-	}
-
-	.facts {
-		display: grid;
-		grid-template-columns: repeat(3, 1fr);
-		gap: 1px;
-		margin: 0;
-		background: #d8d1c1;
-		border: 1px solid #d8d1c1;
-	}
-
-	.facts div {
-		padding: 16px;
-		background: #fffdf8;
-	}
-
-	dt {
-		color: #68655d;
-		font-size: 0.85rem;
-		font-weight: 800;
-	}
-
-	dd {
-		margin: 8px 0 0;
-		font-size: 1rem;
+	time {
+		color: #5f6258;
 		font-weight: 850;
+		white-space: nowrap;
 	}
 
-	.media-section,
-	.reflection,
-	.expenses {
-		margin-top: 42px;
+	.competition-card:hover,
+	.competition-card:focus-visible {
+		border-color: #171717;
+		outline: 2px solid #171717;
+		outline-offset: 0;
 	}
 
-	.video-placeholder {
-		display: grid;
-		aspect-ratio: 16 / 9;
-		place-items: center;
-		border: 1px solid #d8d1c1;
-		background: #26251f;
-		color: #fff;
+	@media (prefers-reduced-motion: reduce) {
+		.slideshow img {
+			animation: none;
+		}
+
+		.slideshow img:first-child {
+			opacity: 1;
+		}
 	}
 
-	iframe {
-		width: 100%;
-		height: 100%;
-		border: 0;
-	}
-
-	.photo-grid {
-		display: grid;
-		grid-template-columns: repeat(4, minmax(0, 1fr));
-		gap: 10px;
-	}
-
-	.photo-link {
-		display: block;
-		aspect-ratio: 4 / 5;
-		overflow: hidden;
-		border: 1px solid #d8d1c1;
-		background: #fffdf8;
-	}
-
-	.photo-link img {
-		width: 100%;
-		height: 100%;
-		object-fit: cover;
-		transition: transform 180ms ease;
-	}
-
-	.photo-link:hover img,
-	.photo-link:focus-visible img {
-		transform: scale(1.03);
-	}
-
-	.expenses {
-		display: grid;
-		grid-template-columns: minmax(0, 0.75fr) minmax(360px, 1fr);
-		gap: 28px;
-		align-items: start;
-	}
-
-	.chart-wrap {
-		display: grid;
-		grid-template-columns: 220px minmax(0, 1fr);
-		gap: 24px;
-		align-items: center;
-	}
-
-	.pie {
-		display: grid;
-		width: 220px;
-		aspect-ratio: 1;
-		place-items: center;
-		border-radius: 50%;
-		position: relative;
-	}
-
-	.pie::after {
-		position: absolute;
-		width: 54%;
-		aspect-ratio: 1;
-		border-radius: 50%;
-		background: #f7f5ef;
-		content: "";
-	}
-
-	.pie span {
-		position: relative;
-		z-index: 1;
-		font-weight: 900;
-	}
-
-	.legend {
-		display: grid;
-		gap: 10px;
-		margin: 0;
-		padding: 0;
-		list-style: none;
-	}
-
-	.legend li {
-		display: grid;
-		grid-template-columns: 14px minmax(0, 1fr) auto;
-		gap: 10px;
-		align-items: center;
-	}
-
-	.legend span {
-		width: 14px;
-		aspect-ratio: 1;
-	}
-
-	.legend em {
-		color: #555149;
-		font-style: normal;
-		font-weight: 750;
-	}
-
-	@media (max-width: 880px) {
-		.competition-header,
-		.expenses,
-		.chart-wrap {
+	@media (max-width: 760px) {
+		.cards {
 			grid-template-columns: 1fr;
-		}
-
-		.photo-grid {
-			grid-template-columns: repeat(2, minmax(0, 1fr));
-		}
-	}
-
-	@media (max-width: 560px) {
-		.facts {
-			grid-template-columns: 1fr;
-		}
-
-		.pie {
-			width: min(100%, 220px);
 		}
 	}
 </style>

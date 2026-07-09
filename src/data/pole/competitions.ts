@@ -1,55 +1,72 @@
 const MEDIA_BASE_URL = 'https://media.cottychiang.com';
-const COMPETITION_PHOTO_BASE = `${MEDIA_BASE_URL}/photos/pole/competitions`;
+const COMPETITION_PHOTO_BASE = `${MEDIA_BASE_URL}/photos/pole/competion`;
 
 const pso2025Photos = [
-	'107b-cotty-2025-taiwan-0135.jpg',
-	'107b-cotty-2025-taiwan-0159.jpg',
-	'107b-cotty-2025-taiwan-0271.jpg',
-	'107b-cotty-2025-taiwan-0331.jpg',
-	'107b-cotty-2025-taiwan-0433.jpg',
-	'107b-cotty-2025-taiwan-0481.jpg',
-	'107b-cotty-2025-taiwan-0507.jpg',
-	'107b-cotty-2025-taiwan-0537.jpg',
-	'107b-cotty-2025-taiwan-0577.jpg',
-	'107b-cotty-2025-taiwan-0601.jpg',
-	'107b-cotty-2025-taiwan-0710.jpg',
-	'107b-cotty-2025-taiwan-0791.jpg',
-	'107b-cotty-2025-taiwan-0838.jpg',
-	'107b-cotty-2025-taiwan-0865.jpg',
-	'107b-cotty-2025-taiwan-0945.jpg',
-	'107b-cotty-2025-taiwan-0976.jpg',
-	'107b-cotty-2025-taiwan-1072.jpg',
-	'107b-cotty-2025-taiwan-1107.jpg',
-	'107b-cotty-2025-taiwan-1154.jpg',
-	'107b-cotty-2025-taiwan-1229.jpg',
+	'107B - Cotty - 2025 Taiwan - 0135.jpg',
+	'107B - Cotty - 2025 Taiwan - 0159.jpg',
+	'107B - Cotty - 2025 Taiwan - 0271.jpg',
+	'107B - Cotty - 2025 Taiwan - 0331.jpg',
+	'107B - Cotty - 2025 Taiwan - 0433.jpg',
+	'107B - Cotty - 2025 Taiwan - 0481.jpg',
+	'107B - Cotty - 2025 Taiwan - 0507.jpg',
+	'107B - Cotty - 2025 Taiwan - 0537.jpg',
+	'107B - Cotty - 2025 Taiwan - 0577.jpg',
+	'107B - Cotty - 2025 Taiwan - 0601.jpg',
+	'107B - Cotty - 2025 Taiwan - 0710.jpg',
+	'107B - Cotty - 2025 Taiwan - 0791.jpg',
+	'107B - Cotty - 2025 Taiwan - 0838.jpg',
+	'107B - Cotty - 2025 Taiwan - 0865.jpg',
+	'107B - Cotty - 2025 Taiwan - 0945.jpg',
+	'107B - Cotty - 2025 Taiwan - 0976.jpg',
+	'107B - Cotty - 2025 Taiwan - 1072.jpg',
+	'107B - Cotty - 2025 Taiwan - 1107.jpg',
+	'107B - Cotty - 2025 Taiwan - 1154.jpg',
+	'107B - Cotty - 2025 Taiwan - 1229.jpg',
 ];
 
 const pso2026Photos = [
-	'109d-cotty-2026-taiwan-0030.jpg',
-	'109d-cotty-2026-taiwan-0128.jpg',
-	'109d-cotty-2026-taiwan-0176.jpg',
-	'109d-cotty-2026-taiwan-0256.jpg',
-	'109d-cotty-2026-taiwan-0260.jpg',
-	'109d-cotty-2026-taiwan-0542.jpg',
-	'109d-cotty-2026-taiwan-0564.jpg',
-	'109d-cotty-2026-taiwan-0627.jpg',
-	'109d-cotty-2026-taiwan-0637.jpg',
-	'109d-cotty-2026-taiwan-0647.jpg',
-	'109d-cotty-2026-taiwan-0834.jpg',
-	'109d-cotty-2026-taiwan-1016.jpg',
-	'109d-cotty-2026-taiwan-1078.jpg',
-	'109d-cotty-2026-taiwan-1079.jpg',
-	'109d-cotty-2026-taiwan-1080-blurry.jpg',
-	'109d-cotty-2026-taiwan-1081.jpg',
-	'109d-cotty-2026-taiwan-1133.jpg',
-	'109d-cotty-2026-taiwan-1183.jpg',
-	'109d-cotty-2026-taiwan-1382.jpg',
-	'109d-cotty-2026-taiwan-1390.jpg',
-	'109d-cotty-2026-taiwan-1437.jpg',
-	'109d-cotty-2026-taiwan-1515.jpg',
-	'109d-cotty-2026-taiwan-1525.jpg',
-	'109d-cotty-2026-taiwan-1622.jpg',
+	'109D - Cotty - 2026 Taiwan - 0030.jpg',
+	'109D - Cotty - 2026 Taiwan - 0128.jpg',
+	'109D - Cotty - 2026 Taiwan - 0176.jpg',
+	'109D - Cotty - 2026 Taiwan - 0256.jpg',
+	'109D - Cotty - 2026 Taiwan - 0260.jpg',
+	'109D - Cotty - 2026 Taiwan - 0542.jpg',
+	'109D - Cotty - 2026 Taiwan - 0564.jpg',
+	'109D - Cotty - 2026 Taiwan - 0627.jpg',
+	'109D - Cotty - 2026 Taiwan - 0637.jpg',
+	'109D - Cotty - 2026 Taiwan - 0647.jpg',
+	'109D - Cotty - 2026 Taiwan - 0834.jpg',
+	'109D - Cotty - 2026 Taiwan - 1016.jpg',
+	'109D - Cotty - 2026 Taiwan - 1078.jpg',
+	'109D - Cotty - 2026 Taiwan - 1079.jpg',
+	'109D - Cotty - 2026 Taiwan - 1080 - Blurry.jpg',
+	'109D - Cotty - 2026 Taiwan - 1081.jpg',
+	'109D - Cotty - 2026 Taiwan - 1133.jpg',
+	'109D - Cotty - 2026 Taiwan - 1183.jpg',
+	'109D - Cotty - 2026 Taiwan - 1382.jpg',
+	'109D - Cotty - 2026 Taiwan - 1390.jpg',
+	'109D - Cotty - 2026 Taiwan - 1437.jpg',
+	'109D - Cotty - 2026 Taiwan - 1515.jpg',
+	'109D - Cotty - 2026 Taiwan - 1525.jpg',
+	'109D - Cotty - 2026 Taiwan - 1622.jpg',
 ];
+
+const pso2025Featured = ['0159', '0271', '0433', '0537', '0945', '1154'];
+const pso2026Featured = ['0128', '0542', '0627', '1437', '1525', '1622'];
+
+function buildPhoto(id: string, file: string) {
+	return {
+		file,
+		src: `${COMPETITION_PHOTO_BASE}/${id}/${encodeURIComponent(file)}`,
+		alt: `${id} competition photo`,
+	};
+}
+
+function selectFeatured(photos: ReturnType<typeof buildPhoto>[], featuredIds: string[]) {
+	return featuredIds
+		.map((featuredId) => photos.find((photo) => photo.file.includes(`- ${featuredId}.jpg`)))
+		.filter((photo): photo is ReturnType<typeof buildPhoto> => Boolean(photo));
+}
 
 export const competitions = [
 	{
@@ -60,10 +77,9 @@ export const competitions = [
 		rank: '4/11',
 		videoUrl: 'https://www.youtube.com/embed/I5i0YMBCo5I',
 		reflection: '第一次，很有趣。',
-		photos: pso2025Photos.map((file) => ({
-			src: `${COMPETITION_PHOTO_BASE}/pso2025/${file}`,
-			alt: 'pso2025 competition photo',
-		})),
+		medal: null,
+		photos: pso2025Photos.map((file) => buildPhoto('pso2025', file)),
+		featuredPhotoIds: pso2025Featured,
 		expenses: [
 			{ category: '私人課', amount: 11200, color: '#d94f30' },
 			{ category: '治裝費', amount: 5124, color: '#2f6f73' },
@@ -81,10 +97,9 @@ export const competitions = [
 		rank: '3/4',
 		videoUrl: 'https://www.youtube.com/embed/LUEY74s_6nA',
 		reflection: '第二次，很好玩。',
-		photos: pso2026Photos.map((file) => ({
-			src: `${COMPETITION_PHOTO_BASE}/pso2026/${file}`,
-			alt: 'pso2026 competition photo',
-		})),
+		medal: 'bronze',
+		photos: pso2026Photos.map((file) => buildPhoto('pso2026', file)),
+		featuredPhotoIds: pso2026Featured,
 		expenses: [
 			{ category: '私人課', amount: 16000, color: '#d94f30' },
 			{ category: '租管', amount: 11675, color: '#2f6f73' },
@@ -95,4 +110,7 @@ export const competitions = [
 			{ category: '交通費', amount: 230, color: '#7a6251' },
 		],
 	},
-];
+].map((competition) => ({
+	...competition,
+	featuredPhotos: selectFeatured(competition.photos, competition.featuredPhotoIds),
+}));
