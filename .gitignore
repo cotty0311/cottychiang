@@ -4,6 +4,11 @@ dist/
 # generated types
 .astro/
 
+# temporary local data processing
+data_preprocess/
+/pso2025/
+/pso2026/
+
 # dependencies
 node_modules/
 

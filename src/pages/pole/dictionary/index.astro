@@ -1,0 +1,52 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+---
+
+<Layout title="Pole Dictionary | Cotty Chiang" description="Cotty Chiang 的鋼管動作字典預留頁。">
+	<main class="page">
+		<a class="back" href="/pole/">Pole</a>
+		<section>
+			<p class="eyebrow">Dictionary</p>
+			<h1>動作字典</h1>
+			<p>這裡先預留給之後整理鋼管動作、進出法、肌群提示和影片筆記。</p>
+		</section>
+	</main>
+</Layout>
+
+<style>
+	.page {
+		display: grid;
+		width: min(100%, 920px);
+		min-height: 100svh;
+		margin: 0 auto;
+		padding: 36px 24px 72px;
+		align-content: center;
+	}
+
+	.back {
+		position: absolute;
+		top: 36px;
+		color: #5f6258;
+		font-weight: 800;
+		text-decoration: none;
+	}
+
+	.eyebrow {
+		color: #b5422a;
+		font-weight: 850;
+		text-transform: uppercase;
+	}
+
+	h1 {
+		margin: 0;
+		font-size: clamp(3.4rem, 10vw, 7.5rem);
+		line-height: 0.95;
+	}
+
+	p {
+		max-width: 640px;
+		color: #3d3d38;
+		font-size: 1.15rem;
+		line-height: 1.75;
+	}
+</style>

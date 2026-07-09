@@ -1,0 +1,419 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import { readCsv } from '../../../lib/csv';
+import practiceRecordsCsv from '../../../data/pole/practice_records.csv?raw';
+import seasonsCsv from '../../../data/pole/seasons.csv?raw';
+import weeksCsv from '../../../data/pole/weeks.csv?raw';
+
+const records = readCsv(practiceRecordsCsv)
+	.map((record) => ({
+		date: record.date,
+		title: record.title,
+		location: record.location,
+		duration: record.duration,
+		content: record.content,
+		sourceFile: record.source_file,
+	}))
+	.sort((a, b) => b.date.localeCompare(a.date));
+
+const weeks = readCsv(weeksCsv).map((week) => ({
+	start: week.week_start,
+	end: week.week_end,
+	title: week.title,
+	sourceFile: week.source_file,
+}));
+
+const seasons = readCsv(seasonsCsv)
+	.map((season) => ({
+		start: season.season_start_date,
+		end: season.season_end_date,
+		title: season.season_title,
+		goal: season.goal,
+		sourceFile: season.source_file,
+	}))
+	.sort((a, b) => b.start.localeCompare(a.start));
+
+const monthFormatter = new Intl.DateTimeFormat('zh-TW', {
+	year: 'numeric',
+	month: 'long',
+});
+
+const dateFormatter = new Intl.DateTimeFormat('zh-TW', {
+	year: 'numeric',
+	month: '2-digit',
+	day: '2-digit',
+	weekday: 'short',
+});
+
+const findRange = <T extends { start: string; end: string }>(items: T[], date: string) =>
+	items.find((item) => item.start <= date && date <= item.end);
+
+const groupedSeasons = seasons.map((season) => {
+	const seasonRecords = records.filter((record) => season.start <= record.date && record.date <= season.end);
+	const monthMap = new Map<string, typeof records>();
+
+	for (const record of seasonRecords) {
+		const monthKey = record.date.slice(0, 7);
+		monthMap.set(monthKey, [...(monthMap.get(monthKey) ?? []), record]);
+	}
+
+	const months = [...monthMap.entries()]
+		.sort(([a], [b]) => b.localeCompare(a))
+		.map(([month, monthRecords]) => {
+			const weekMap = new Map<string, { week: (typeof weeks)[number] | undefined; records: typeof records }>();
+
+			for (const record of monthRecords) {
+				const week = findRange(weeks, record.date);
+				const weekKey = week ? `${week.start}|${week.end}` : `${record.date}|${record.date}`;
+				const current = weekMap.get(weekKey) ?? { week, records: [] };
+				current.records.push(record);
+				weekMap.set(weekKey, current);
+			}
+
+			const groupedWeeks = [...weekMap.values()].sort((a, b) => {
+				const aStart = a.week?.start ?? a.records[0]?.date ?? '';
+				const bStart = b.week?.start ?? b.records[0]?.date ?? '';
+				return bStart.localeCompare(aStart);
+			});
+
+			return { month, records: monthRecords, weeks: groupedWeeks };
+		});
+
+	return { ...season, records: seasonRecords, months };
+});
+
+const totalHours = records.reduce((sum, record) => sum + Number(record.duration || 0), 0);
+
+function formatDate(date: string) {
+	return dateFormatter.format(new Date(`${date}T00:00:00`));
+}
+
+function formatMonth(month: string) {
+	return monthFormatter.format(new Date(`${month}-01T00:00:00`));
+}
+
+function escapeHtml(value: string) {
+	return value
+		.replaceAll('&', '&amp;')
+		.replaceAll('<', '&lt;')
+		.replaceAll('>', '&gt;')
+		.replaceAll('"', '&quot;')
+		.replaceAll("'", '&#039;');
+}
+
+function renderPracticeContent(content: string) {
+	return escapeHtml(content)
+		.split(/\n/)
+		.map((line) => {
+			const trimmed = line.trim();
+
+			if (!trimmed) {
+				return '';
+			}
+
+			if (trimmed.startsWith('### ')) {
+				return `<h4>${trimmed.replace(/^###\s+/, '')}</h4>`;
+			}
+
+			if (trimmed.startsWith('- [x]')) {
+				return `<p class="checked">${trimmed.replace(/^- \[x\]\s*/, '')}</p>`;
+			}
+
+			if (trimmed.startsWith('- [ ]')) {
+				return `<p class="unchecked">${trimmed.replace(/^- \[ \]\s*/, '')}</p>`;
+			}
+
+			if (trimmed.startsWith('- ')) {
+				return `<p class="bullet">${trimmed.replace(/^-\s*/, '')}</p>`;
+			}
+
+			return `<p>${trimmed}</p>`;
+		})
+		.join('');
+}
+---
+
+<Layout title="Pole Practice | Cotty Chiang" description="Cotty Chiang 的鋼管練習紀錄。">
+	<main class="page">
+		<header class="hero">
+			<a class="back" href="/pole/">Pole</a>
+			<p class="eyebrow">Practice</p>
+			<h1>練習紀錄</h1>
+			<p>從 CSV 轉成網頁的練管日誌。最新紀錄在前，可依季、月、週折疊瀏覽。</p>
+			<div class="stats" aria-label="Practice summary">
+				<div>
+					<strong>{records.length}</strong>
+					<span>records</span>
+				</div>
+				<div>
+					<strong>{totalHours.toFixed(1)}</strong>
+					<span>hours</span>
+				</div>
+				<div>
+					<strong>{seasons.length}</strong>
+					<span>seasons</span>
+				</div>
+			</div>
+		</header>
+
+		<section class="timeline" aria-label="Practice timeline">
+			{groupedSeasons.map((season, seasonIndex) => (
+				<details class="season" open={seasonIndex === 0}>
+					<summary>
+						<span>{season.title}</span>
+						<small>{season.start} - {season.end} · {season.records.length} records</small>
+					</summary>
+
+					<div class="season-body">
+						{season.months.map((month, monthIndex) => (
+							<details class="month" open={seasonIndex === 0 && monthIndex === 0}>
+								<summary>
+									<span>{formatMonth(month.month)}</span>
+									<small>{month.records.length} records</small>
+								</summary>
+
+								<div class="month-body">
+									{month.weeks.map(({ week, records: weekRecords }, weekIndex) => (
+										<details class="week" open={seasonIndex === 0 && monthIndex === 0 && weekIndex === 0}>
+											<summary>
+												<span>{week?.title ?? '未分週紀錄'}</span>
+												<small>
+													{week?.start ?? weekRecords[0].date} - {week?.end ?? weekRecords[0].date}
+													{' '}· {weekRecords.length} records
+												</small>
+											</summary>
+
+											<div class="records">
+												{weekRecords.map((record) => (
+													<article class="record" id={`practice-${record.date}`}>
+														<header>
+															<time datetime={record.date}>{formatDate(record.date)}</time>
+															<h2>{record.title || '練習紀錄'}</h2>
+															<p>
+																{record.location || '未記錄地點'}
+																{record.duration ? ` · ${record.duration} hr` : ''}
+															</p>
+														</header>
+														<div class="record-content" set:html={renderPracticeContent(record.content)} />
+													</article>
+												))}
+											</div>
+										</details>
+									))}
+								</div>
+							</details>
+						))}
+					</div>
+				</details>
+			))}
+		</section>
+	</main>
+</Layout>
+
+<style>
+	.page {
+		width: min(100%, 1040px);
+		margin: 0 auto;
+		padding: 36px 24px 88px;
+	}
+
+	.back {
+		color: #5f6258;
+		font-weight: 800;
+		text-decoration: none;
+	}
+
+	.hero {
+		padding: 72px 0 42px;
+	}
+
+	.eyebrow {
+		color: #b5422a;
+		font-weight: 850;
+		text-transform: uppercase;
+	}
+
+	h1 {
+		margin: 0;
+		font-size: clamp(3.4rem, 10vw, 7.5rem);
+		line-height: 0.95;
+	}
+
+	.hero p {
+		max-width: 720px;
+		color: #3d3d38;
+		font-size: 1.1rem;
+		line-height: 1.75;
+	}
+
+	.stats {
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: 1px;
+		max-width: 560px;
+		margin-top: 28px;
+		border: 1px solid #d8d1c1;
+		background: #d8d1c1;
+	}
+
+	.stats div {
+		padding: 16px;
+		background: #fffdf8;
+	}
+
+	.stats strong,
+	.stats span {
+		display: block;
+	}
+
+	.stats strong {
+		font-size: 1.55rem;
+	}
+
+	.stats span {
+		color: #68655d;
+		font-size: 0.82rem;
+		font-weight: 850;
+		text-transform: uppercase;
+	}
+
+	.timeline {
+		display: grid;
+		gap: 14px;
+	}
+
+	details {
+		border: 1px solid #d8d1c1;
+		background: #fffdf8;
+	}
+
+	summary {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) auto;
+		gap: 16px;
+		align-items: center;
+		cursor: pointer;
+		list-style: none;
+		padding: 18px;
+	}
+
+	summary::-webkit-details-marker {
+		display: none;
+	}
+
+	summary span {
+		font-size: 1.05rem;
+		font-weight: 900;
+	}
+
+	summary small {
+		color: #68655d;
+		font-weight: 750;
+		text-align: right;
+	}
+
+	details[open] > summary {
+		border-bottom: 1px solid #d8d1c1;
+	}
+
+	.season > summary {
+		background: #171717;
+		color: #fff;
+	}
+
+	.season > summary small {
+		color: #ded7c9;
+	}
+
+	.season-body,
+	.month-body {
+		display: grid;
+		gap: 12px;
+		padding: 12px;
+	}
+
+	.month,
+	.week {
+		background: #fbf7ee;
+	}
+
+	.records {
+		display: grid;
+		gap: 10px;
+		padding: 12px;
+	}
+
+	.record {
+		display: grid;
+		grid-template-columns: 240px minmax(0, 1fr);
+		gap: 22px;
+		border: 1px solid #e4ddcf;
+		padding: 18px;
+		background: #fff;
+	}
+
+	time {
+		color: #b5422a;
+		font-weight: 900;
+	}
+
+	h2 {
+		margin: 12px 0 8px;
+		font-size: 1.25rem;
+		line-height: 1.25;
+	}
+
+	.record header p {
+		margin: 0;
+		color: #68655d;
+		font-weight: 750;
+	}
+
+	.record-content {
+		color: #35332e;
+		font-size: 0.98rem;
+		line-height: 1.65;
+	}
+
+	.record-content :global(h4) {
+		margin: 0 0 8px;
+		font-size: 1rem;
+	}
+
+	.record-content :global(p) {
+		margin: 0 0 6px;
+	}
+
+	.record-content :global(.checked)::before {
+		color: #2f6f73;
+		content: "✓ ";
+		font-weight: 900;
+	}
+
+	.record-content :global(.unchecked)::before {
+		color: #9a9488;
+		content: "□ ";
+		font-weight: 900;
+	}
+
+	.record-content :global(.bullet)::before {
+		color: #b5422a;
+		content: "- ";
+		font-weight: 900;
+	}
+
+	@media (max-width: 760px) {
+		summary,
+		.record {
+			grid-template-columns: 1fr;
+		}
+
+		summary small {
+			text-align: left;
+		}
+
+		.stats {
+			grid-template-columns: 1fr;
+		}
+	}
+</style>
