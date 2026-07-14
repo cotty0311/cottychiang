@@ -1,0 +1,14 @@
+---
+const { competition } = Astro.props;
+---
+
+<section class="tv-channel photo-channel" data-channel-panel="photo" aria-label="比賽照片" hidden>
+	<div class="photo-reel" data-photo-reel>
+		{competition.photos.map((photo, index) => (
+			<figure class:list={['reel-photo', { 'is-current': index === 0 }]} data-photo-index={index}>
+				<img src={photo.src} alt={`${competition.name} 比賽照片 ${index + 1}`} loading={index < 2 ? 'eager' : 'lazy'} />
+				<figcaption><span>{competition.date}</span><b>{photo.file}</b></figcaption>
+			</figure>
+		))}
+	</div>
+</section>

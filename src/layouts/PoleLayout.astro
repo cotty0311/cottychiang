@@ -1,0 +1,33 @@
+---
+import Layout from './Layout.astro';
+import '../styles/pole.css';
+
+const {
+	title = 'Pole | Cotty Chiang',
+	description = 'Cotty Chiang 的鋼管宇宙紀錄。',
+} = Astro.props;
+---
+
+<Layout title={title} description={description}>
+	<div class="pole-universe" data-pole-universe>
+		<div class="cosmos" aria-hidden="true">
+			<div class="nebula nebula-one"></div>
+			<div class="nebula nebula-two"></div>
+			<div class="star-field star-field-far"></div>
+			<div class="star-field star-field-near"></div>
+			<div class="orbit orbit-one"></div>
+			<div class="orbit orbit-two"></div>
+		</div>
+		<slot />
+	</div>
+
+	<script>
+		const universe = document.querySelector('[data-pole-universe]');
+		if (universe instanceof HTMLElement) {
+			universe.addEventListener('pointermove', (event) => {
+				universe.style.setProperty('--pointer-x', `${event.clientX}px`);
+				universe.style.setProperty('--pointer-y', `${event.clientY}px`);
+			});
+		}
+	</script>
+</Layout>

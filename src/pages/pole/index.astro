@@ -1,746 +1,353 @@
 ---
-import Layout from '../../layouts/Layout.astro';
+import PoleLayout from '../../layouts/PoleLayout.astro';
+import { competitions } from '../../data/pole/competitions';
 import { readCsv } from '../../lib/csv';
+import { renderMarkdown } from '../../lib/markdown';
 import practiceRecordsCsv from '../../data/pole/practice_records.csv?raw';
+import '../../styles/pole-room.css';
 
-const links = [
-	{
-		href: '/pole/competition/',
-		label: 'Competition',
-		description: '比賽影片、照片、資訊、心得與花費分析。',
-	},
-	{
-		href: '/pole/practice/',
-		label: 'Practice',
-		description: '依季、月、週折疊的日常練習紀錄。',
-	},
-	{
-		href: '/pole/dictionary/',
-		label: 'Dictionary',
-		description: '鋼管動作字典預留區。',
-	},
-	{
-		href: '/pole/event/',
-		label: 'Event',
-		description: '營隊與活動紀錄預留區。',
-	},
-];
-
-const practiceEvents = readCsv(practiceRecordsCsv).map((record) => ({
-	type: 'practice',
-	date: record.date,
-	title: record.title || '練習紀錄',
-	location: record.location,
-	hours: record.duration ? `${record.duration} hr` : '',
-	href: `/pole/practice/#practice-${record.date}`,
-}));
+const records = readCsv(practiceRecordsCsv)
+	.map((record) => ({
+		type: 'practice',
+		date: record.date,
+		title: record.title || '練習紀錄',
+		location: record.location,
+		hours: record.duration ? `${record.duration} hr` : '',
+		detailHtml: renderMarkdown(record.content || '尚未留下訓練細項。'),
+		href: `/pole/practice/#practice-${record.date}`,
+	}))
+	.sort((a, b) => b.date.localeCompare(a.date));
 
 const calendarEvents = [
 	{
-		type: 'competition',
-		date: '2025-03-29',
-		title: 'PSO 2025',
-		location: '臺灣圖書館',
-		hours: '',
+		type: 'competition', date: '2025-03-29', title: 'PSO 2025', location: '臺灣圖書館', hours: '',
+		detailHtml: renderMarkdown('## 第一次參賽\n\n名次 **4 / 11**。這是第一次把練習帶上舞台。'),
 		href: '/pole/competition/pso2025/',
 	},
 	{
-		type: 'competition',
-		date: '2026-03-07',
-		title: 'PSO 2026',
-		location: '臺灣戲曲學院',
-		hours: '',
+		type: 'competition', date: '2026-03-07', title: 'PSO 2026', location: '臺灣戲曲學院', hours: '',
+		detailHtml: renderMarkdown('## 第二次參賽\n\n獲得 **銅牌 · 3 / 4**。'),
 		href: '/pole/competition/pso2026/',
 	},
 	{
-		type: 'event',
-		date: '2025-07-02',
-		endDate: '2025-07-05',
-		title: 'Dazzling pole camp',
-		location: '',
-		hours: '',
+		type: 'event', date: '2025-07-02', endDate: '2025-07-05', title: 'Dazzling pole camp', location: '', hours: '',
+		detailHtml: renderMarkdown('四天的營隊、課程與身體記憶。'),
 		href: '/pole/event/#dazzling-pole-camp',
 	},
-	...practiceEvents,
+	...records,
 ].sort((a, b) => b.date.localeCompare(a.date));
+
+const roomPhotos = competitions.flatMap((competition) =>
+	competition.featuredPhotos.slice(0, 3).map((photo) => ({
+		...photo,
+		title: competition.name,
+		date: competition.date,
+		href: `/pole/competition/${competition.id}/`,
+	})),
+).slice(0, 6);
+
+const recentRecords = records.slice(0, 4);
+const serializedEvents = JSON.stringify(calendarEvents).replaceAll('<', '\\u003c');
 ---
 
-<Layout title="Pole | Cotty Chiang" description="Cotty Chiang 的鋼管紀錄。">
-	<main class="pole-home">
-		<header>
-			<a class="back" href="/">Cotty Chiang</a>
-			<p class="eyebrow">Pole archive</p>
-			<h1>Pole</h1>
-			<p>比賽、練習、動作與活動紀錄。先把資料架好，之後就能慢慢補照片和影片。</p>
+<PoleLayout title="Cotty's Pole Room" description="進入 Cotty 的鋼管練習房間，探索日曆、練習手帳與回憶照片牆。">
+	<main class="room-experience" data-room-experience>
+		<div class="room-curtain" aria-hidden="true">
+			<span class="door-left"></span>
+			<span class="door-right"></span>
+			<p>ENTERING<br /><b>COTTY'S POLE ROOM</b></p>
+		</div>
+
+		<header class="room-hud">
+			<a class="room-home scene-route" href="/">← Cotty Chiang</a>
+			<div class="room-title">
+				<span class="room-signal" aria-hidden="true"></span>
+				<p>Cotty's Pole Room</p>
+				<small>PRIVATE ORBIT · 01</small>
+			</div>
+			<button class="room-reset" type="button" data-room-reset hidden>返回房間</button>
 		</header>
 
-		<nav class="grid" aria-label="Pole sections">
-			{links.map((link) => (
-				<a href={link.href}>
-					<span>{link.label}</span>
-					<small>{link.description}</small>
-				</a>
-			))}
-		</nav>
+		<section class="room-scene" data-room-scene aria-label="Cotty 的鋼管練習房間">
+			<img class="room-art" src="/images/pole-room-scene.webp" alt="星空下的鋼管練習房間，牆上有日曆與照片，桌上散放練習紙張" fetchpriority="high" />
+			<div class="room-vignette" aria-hidden="true"></div>
+			<div class="dust-layer" aria-hidden="true"></div>
 
-		<section class="calendar" aria-labelledby="calendar-title">
-			<div class="section-heading">
-				<p class="eyebrow">Calendar</p>
-				<h2 id="calendar-title">日期檢視</h2>
+			<div class="room-intro">
+				<p>MY PRIVATE UNIVERSE</p>
+				<h1>在房間裡<br />尋找留下的光。</h1>
+				<span>移動滑鼠，靠近發亮的物件</span>
 			</div>
 
-			<div class="legend" aria-label="Event types">
-				<span class="competition">Competition</span>
-				<span class="practice">Practice</span>
-				<span class="event">Event</span>
-			</div>
+			<button class="scene-hotspot hotspot-calendar" type="button" data-open-panel="calendar" aria-label="靠近日曆，查看日期與練習時間軸">
+				<span class="mobile-calendar-prop" aria-hidden="true">
+					<b>MAY</b><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+				</span>
+				<span class="hotspot-glow"></span>
+				<span class="hotspot-label"><i>01</i><b>牆上的日曆</b><small>日期與練習時間軸</small></span>
+			</button>
 
-			<div class="calendar-shell" data-calendar>
-				<div class="calendar-toolbar">
-					<button type="button" data-calendar-prev aria-label="Previous month">‹</button>
-					<h3 data-calendar-title></h3>
-					<button type="button" data-calendar-next aria-label="Next month">›</button>
+			<button class="scene-hotspot hotspot-papers" type="button" data-open-panel="papers" aria-label="拿起桌上的紙，查看最近練習紀錄">
+				<span class="paper-edge paper-edge-one"></span>
+				<span class="paper-edge paper-edge-two"></span>
+				<span class="hotspot-glow"></span>
+				<span class="hotspot-label"><i>02</i><b>桌上的練習紙</b><small>最近寫下的紀錄</small></span>
+			</button>
+
+			<button class="scene-hotspot hotspot-photos" type="button" data-open-panel="photos" aria-label="打開活動紀錄照片牆">
+				<span class="mobile-photos-prop" aria-hidden="true">
+					<img src={roomPhotos[0].src} alt="" loading="lazy" />
+					<img src={roomPhotos[3].src} alt="" loading="lazy" />
+				</span>
+				<span class="hotspot-glow"></span>
+				<span class="hotspot-label"><i>03</i><b>活動紀錄</b><small>比賽與活動照片牆</small></span>
+			</button>
+
+			<a class="scene-hotspot hotspot-dictionary scene-route" href="/pole/dictionary/" aria-label="打開桌上的動作字典">
+				<span class="dictionary-book" aria-hidden="true"><i></i><b>POLE<br />DICTIONARY</b></span>
+				<span class="hotspot-glow"></span>
+				<span class="hotspot-label"><i>04</i><b>動作字典</b><small>桌上的技巧索引</small></span>
+			</a>
+		</section>
+
+		<section class="scene-panel calendar-panel" data-scene-panel="calendar" aria-hidden="true">
+			<div class="panel-depth" aria-hidden="true"></div>
+			<div class="calendar-focus">
+				<header class="object-header">
+					<div>
+						<p>01 · WALL CALENDAR</p>
+						<h2>練習日曆</h2>
+					</div>
+					<div class="calendar-legend" aria-label="紀錄類型">
+						<span class="practice">練習</span><span class="competition">比賽</span><span class="event">活動</span>
+					</div>
+				</header>
+
+				<div class="calendar-workspace">
+					<div class="wall-calendar" data-calendar>
+						<div class="calendar-rings" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+						<div class="calendar-toolbar">
+							<button type="button" data-calendar-prev aria-label="上一個月">←</button>
+							<h3 data-calendar-title></h3>
+							<button type="button" data-calendar-next aria-label="下一個月">→</button>
+						</div>
+						<div class="weekday-row" aria-hidden="true">
+							<span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+						</div>
+						<div class="calendar-grid" data-calendar-grid></div>
+						<p class="calendar-note">有顏色的手寫標記代表這天留下了紀錄。點日期，從日曆後抽出那天的紙。</p>
+					</div>
+
+					<aside class="day-sheet" data-day-sheet hidden aria-live="polite">
+						<button class="sheet-close" type="button" data-day-sheet-close aria-label="收起當日紀錄">收回日曆後方 ×</button>
+						<p class="day-sheet-date" data-day-sheet-date></p>
+						<div class="day-sheet-events" data-day-sheet-events></div>
+					</aside>
 				</div>
-				<div class="weekday-row" aria-hidden="true">
-					<span>Sun</span>
-					<span>Mon</span>
-					<span>Tue</span>
-					<span>Wed</span>
-					<span>Thu</span>
-					<span>Fri</span>
-					<span>Sat</span>
-				</div>
-				<div class="calendar-grid" data-calendar-grid></div>
 			</div>
+		</section>
 
-			<div class="day-popover" data-day-popover hidden>
-				<div class="day-popover-panel" role="dialog" aria-modal="true" aria-labelledby="day-popover-title">
-					<button class="day-popover-close" type="button" data-day-popover-close aria-label="Close">×</button>
-					<p class="day-popover-date" id="day-popover-title" data-day-popover-date></p>
-					<div class="day-popover-events" data-day-popover-events></div>
+		<section class="scene-panel papers-panel" data-scene-panel="papers" aria-hidden="true">
+			<div class="panel-depth" aria-hidden="true"></div>
+			<div class="desk-focus">
+				<header class="object-header">
+					<div><p>02 · DESK ARCHIVE</p><h2>剛寫下的練習</h2></div>
+					<a class="archive-link scene-route" href="/pole/practice/">打開完整檔案櫃 ↗</a>
+				</header>
+				<div class="paper-desk" data-paper-desk>
+					{recentRecords.map((record, index) => (
+						<article class:list={['practice-sheet', `sheet-${index + 1}`]} data-record-sheet>
+							<button class="sheet-handle" type="button" aria-label={`拿起 ${record.date} ${record.title} 的練習紙`}>
+								<time datetime={record.date}>{record.date.replaceAll('-', ' . ')}</time>
+								<h3>{record.title}</h3>
+								<p>{[record.location, record.hours].filter(Boolean).join(' · ')}</p>
+								<span>拿起來看看</span>
+							</button>
+							<div class="sheet-body markdown-body" set:html={record.detailHtml}></div>
+							<a class="sheet-route scene-route" href={record.href}>前往完整練習紀錄 ↗</a>
+						</article>
+					))}
+				</div>
+			</div>
+		</section>
+
+		<section class="scene-panel photos-panel" data-scene-panel="photos" aria-hidden="true">
+			<div class="panel-depth" aria-hidden="true"></div>
+			<div class="memory-focus">
+				<header class="object-header">
+					<div><p>03 · MEMORY WALL</p><h2>活動紀錄</h2></div>
+				</header>
+				<div class="memory-board">
+					<div class="memory-string" aria-hidden="true"></div>
+					<a class="memory-folder competition-folder scene-route" href="/pole/competition/">
+						<small>ARCHIVE · A</small><b>比賽</b><span>影片、照片、心得與花費 ↗</span>
+					</a>
+					<a class="memory-folder event-folder scene-route" href="/pole/event/">
+						<small>ARCHIVE · B</small><b>活動</b><span>營隊、課程與相遇的紀錄 ↗</span>
+					</a>
+					{roomPhotos.map((photo, index) => (
+						<a class:list={['polaroid', `photo-${index + 1}`, 'scene-route']} href={photo.href}>
+							<span class="photo-pin" aria-hidden="true"></span>
+							<img src={photo.src} alt={photo.alt} loading="lazy" />
+							<span><b>{photo.title}</b><small>{photo.date}</small></span>
+						</a>
+					))}
 				</div>
 			</div>
 		</section>
 	</main>
 
-<script type="application/json" id="calendar-events" set:html={JSON.stringify(calendarEvents)} />
+	<script type="application/json" id="calendar-events" set:html={serializedEvents} />
 
-<script>
-	const eventScript = document.getElementById('calendar-events');
-	const calendarRoot = document.querySelector('[data-calendar]');
-	const calendarGrid = document.querySelector('[data-calendar-grid]');
-	const calendarTitle = document.querySelector('[data-calendar-title]');
-	const prevButton = document.querySelector('[data-calendar-prev]');
-	const nextButton = document.querySelector('[data-calendar-next]');
-	const dayPopover = document.querySelector('[data-day-popover]');
-	const dayPopoverDate = document.querySelector('[data-day-popover-date]');
-	const dayPopoverEvents = document.querySelector('[data-day-popover-events]');
-	const dayPopoverClose = document.querySelector('[data-day-popover-close]');
-	const rawEvents = eventScript ? JSON.parse(eventScript.textContent || '[]') : [];
-	const typeLabels = {
-		competition: 'Competition',
-		practice: 'Practice',
-		event: 'Event',
-	};
+	<script>
+		const experience = document.querySelector('[data-room-experience]');
+		const roomScene = document.querySelector('[data-room-scene]');
+		const resetButton = document.querySelector('[data-room-reset]');
+		const panels = [...document.querySelectorAll('[data-scene-panel]')];
+		const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-	const parseLocalDate = (date) => {
-		const [year, month, day] = date.split('-').map(Number);
-		return new Date(year, month - 1, day);
-	};
-
-	const toKey = (date) => {
-		const year = date.getFullYear();
-		const month = `${date.getMonth() + 1}`.padStart(2, '0');
-		const day = `${date.getDate()}`.padStart(2, '0');
-		return `${year}-${month}-${day}`;
-	};
-
-	const formatPopoverDate = (date) => {
-		return new Intl.DateTimeFormat('zh-TW', {
-			year: 'numeric',
-			month: 'long',
-			day: 'numeric',
-			weekday: 'long',
-		}).format(parseLocalDate(date));
-	};
-
-	const expandedEvents = rawEvents.flatMap((event) => {
-		if (!event.endDate) {
-			return [event];
+		function closeDaySheet() {
+			const sheet = document.querySelector('[data-day-sheet]');
+			if (!(sheet instanceof HTMLElement)) return;
+			sheet.classList.remove('is-visible');
+			window.setTimeout(() => { sheet.hidden = true; }, reduceMotion ? 0 : 280);
 		}
 
-		const dates = [];
-		const cursor = parseLocalDate(event.date);
-		const end = parseLocalDate(event.endDate);
-
-		while (cursor <= end) {
-			dates.push({ ...event, date: toKey(cursor) });
-			cursor.setDate(cursor.getDate() + 1);
+		function openPanel(name) {
+			if (!(experience instanceof HTMLElement) || !(roomScene instanceof HTMLElement)) return;
+			const panel = panels.find((item) => item.getAttribute('data-scene-panel') === name);
+			if (!(panel instanceof HTMLElement)) return;
+			experience.dataset.focus = name;
+			roomScene.setAttribute('aria-hidden', 'true');
+			panels.forEach((item) => {
+				if (item !== panel && item instanceof HTMLElement) {
+					item.classList.remove('is-active');
+					item.setAttribute('aria-hidden', 'true');
+				}
+			});
+			panel.setAttribute('aria-hidden', 'false');
+			requestAnimationFrame(() => panel.classList.add('is-active'));
+			if (resetButton instanceof HTMLButtonElement) resetButton.hidden = false;
+			window.setTimeout(() => panel.querySelector('button, a')?.focus(), reduceMotion ? 0 : 430);
 		}
 
-		return dates;
-	});
-
-	const eventsByDate = expandedEvents.reduce((groups, event) => {
-		groups[event.date] = [...(groups[event.date] || []), event];
-		return groups;
-	}, {});
-
-	const monthKeys = [];
-	const monthCursor = parseLocalDate(expandedEvents.map((event) => event.date).sort()[0]);
-	const lastEventDate = parseLocalDate(expandedEvents.map((event) => event.date).sort().at(-1));
-	monthCursor.setDate(1);
-
-	while (monthCursor <= lastEventDate) {
-		monthKeys.push(`${monthCursor.getFullYear()}-${`${monthCursor.getMonth() + 1}`.padStart(2, '0')}`);
-		monthCursor.setMonth(monthCursor.getMonth() + 1);
-	}
-
-	let activeMonthIndex = Math.max(0, monthKeys.length - 1);
-	const monthFormatter = new Intl.DateTimeFormat('zh-TW', {
-		year: 'numeric',
-		month: 'long',
-	});
-
-	function closeDayPopover() {
-		if (!dayPopover) {
-			return;
+		function resetRoom() {
+			if (!(experience instanceof HTMLElement) || !(roomScene instanceof HTMLElement)) return;
+			delete experience.dataset.focus;
+			roomScene.setAttribute('aria-hidden', 'false');
+			panels.forEach((panel) => {
+				panel.classList.remove('is-active');
+				panel.setAttribute('aria-hidden', 'true');
+			});
+			closeDaySheet();
+			document.querySelectorAll('[data-record-sheet]').forEach((sheet) => sheet.classList.remove('is-selected'));
+			if (resetButton instanceof HTMLButtonElement) resetButton.hidden = true;
 		}
 
-		dayPopover.hidden = true;
-	}
+		document.querySelectorAll('[data-open-panel]').forEach((hotspot) => {
+			hotspot.addEventListener('click', () => openPanel(hotspot.getAttribute('data-open-panel')));
+		});
+		resetButton?.addEventListener('click', resetRoom);
+		document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && experience?.hasAttribute('data-focus')) resetRoom(); });
 
-	function showDayPopover(date, events) {
-		if (!dayPopover || !dayPopoverDate || !dayPopoverEvents) {
-			return;
+		if (roomScene instanceof HTMLElement && !reduceMotion) {
+			roomScene.addEventListener('pointermove', (event) => {
+				const rect = roomScene.getBoundingClientRect();
+				roomScene.style.setProperty('--scene-x', `${((event.clientX - rect.left) / rect.width - .5) * -10}px`);
+				roomScene.style.setProperty('--scene-y', `${((event.clientY - rect.top) / rect.height - .5) * -7}px`);
+			});
 		}
 
-		dayPopoverDate.textContent = formatPopoverDate(date);
-		dayPopoverEvents.innerHTML = '';
+		document.querySelectorAll('[data-record-sheet]').forEach((sheet) => {
+			const handle = sheet.querySelector('.sheet-handle');
+			handle?.addEventListener('click', () => {
+				const selected = sheet.classList.contains('is-selected');
+				document.querySelectorAll('[data-record-sheet]').forEach((item) => item.classList.remove('is-selected'));
+				if (!selected) sheet.classList.add('is-selected');
+			});
+		});
 
-		for (const event of events) {
-			const card = document.createElement('article');
-			card.className = `popover-event ${event.type}`;
+		document.querySelectorAll('.scene-route').forEach((link) => {
+			link.addEventListener('click', (event) => {
+				if (reduceMotion || !(link instanceof HTMLAnchorElement) || event.metaKey || event.ctrlKey) return;
+				event.preventDefault();
+				experience?.classList.add('is-leaving');
+				window.setTimeout(() => window.location.assign(link.href), 360);
+			});
+		});
 
-			const titleLink = document.createElement('a');
-			titleLink.className = 'popover-event-title';
-			titleLink.href = event.href;
-			titleLink.textContent = event.title;
-
-			const meta = document.createElement('p');
-			meta.textContent = [typeLabels[event.type], event.location, event.hours].filter(Boolean).join(' · ');
-
-			card.append(titleLink, meta);
-			dayPopoverEvents.append(card);
+		const eventScript = document.getElementById('calendar-events');
+		const calendarGrid = document.querySelector('[data-calendar-grid]');
+		const calendarTitle = document.querySelector('[data-calendar-title]');
+		const prevButton = document.querySelector('[data-calendar-prev]');
+		const nextButton = document.querySelector('[data-calendar-next]');
+		const daySheet = document.querySelector('[data-day-sheet]');
+		const daySheetDate = document.querySelector('[data-day-sheet-date]');
+		const daySheetEvents = document.querySelector('[data-day-sheet-events]');
+		const rawEvents = eventScript ? JSON.parse(eventScript.textContent || '[]') : [];
+		const typeLabels = { competition: 'Competition', practice: 'Practice', event: 'Event' };
+		const parseLocalDate = (value) => { const [year, month, day] = value.split('-').map(Number); return new Date(year, month - 1, day); };
+		const toKey = (date) => `${date.getFullYear()}-${`${date.getMonth() + 1}`.padStart(2, '0')}-${`${date.getDate()}`.padStart(2, '0')}`;
+		const formatDate = (value) => new Intl.DateTimeFormat('zh-TW', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' }).format(parseLocalDate(value));
+		const expandedEvents = rawEvents.flatMap((event) => {
+			if (!event.endDate) return [event];
+			const result = []; const cursor = parseLocalDate(event.date); const end = parseLocalDate(event.endDate);
+			while (cursor <= end) { result.push({ ...event, date: toKey(cursor) }); cursor.setDate(cursor.getDate() + 1); }
+			return result;
+		});
+		const eventsByDate = expandedEvents.reduce((groups, event) => { groups[event.date] = [...(groups[event.date] || []), event]; return groups; }, {});
+		const sortedDates = expandedEvents.map((event) => event.date).sort();
+		const monthKeys = [];
+		if (sortedDates.length) {
+			const cursor = parseLocalDate(sortedDates[0]); const last = parseLocalDate(sortedDates.at(-1)); cursor.setDate(1);
+			while (cursor <= last) { monthKeys.push(`${cursor.getFullYear()}-${`${cursor.getMonth() + 1}`.padStart(2, '0')}`); cursor.setMonth(cursor.getMonth() + 1); }
 		}
+		let activeMonthIndex = Math.max(0, monthKeys.length - 1);
+		const monthFormatter = new Intl.DateTimeFormat('zh-TW', { year: 'numeric', month: 'long' });
 
-		dayPopover.hidden = false;
-	}
-
-	function renderCalendar() {
-		if (!calendarRoot || !calendarGrid || !calendarTitle || !prevButton || !nextButton) {
-			return;
-		}
-
-		const activeMonth = monthKeys[activeMonthIndex];
-		const [year, month] = activeMonth.split('-').map(Number);
-		const firstDay = new Date(year, month - 1, 1);
-		const lastDay = new Date(year, month, 0);
-		const totalCells = 42;
-		const titleDate = new Date(year, month - 1, 1);
-
-		closeDayPopover();
-		calendarTitle.textContent = monthFormatter.format(titleDate);
-		prevButton.disabled = activeMonthIndex === 0;
-		nextButton.disabled = activeMonthIndex === monthKeys.length - 1;
-		calendarGrid.innerHTML = '';
-
-		for (let index = 0; index < totalCells; index += 1) {
-			const dayNumber = index - firstDay.getDay() + 1;
-			const cell = document.createElement('div');
-			cell.className = 'day-cell';
-
-			if (dayNumber < 1 || dayNumber > lastDay.getDate()) {
-				cell.classList.add('is-empty');
-				calendarGrid.append(cell);
-				continue;
+		function showDaySheet(date, events) {
+			if (!(daySheet instanceof HTMLElement) || !(daySheetDate instanceof HTMLElement) || !(daySheetEvents instanceof HTMLElement)) return;
+			daySheetDate.textContent = formatDate(date);
+			daySheetEvents.replaceChildren();
+			for (const item of events) {
+				const record = document.createElement('article'); record.className = `day-record ${item.type}`;
+				const kind = document.createElement('p'); kind.className = 'day-record-kind'; kind.textContent = typeLabels[item.type];
+				const title = document.createElement('a'); title.className = 'day-record-title scene-route'; title.href = item.href; title.textContent = item.title;
+				title.addEventListener('click', (event) => { if (!reduceMotion) { event.preventDefault(); experience?.classList.add('is-leaving'); window.setTimeout(() => window.location.assign(title.href), 360); } });
+				const meta = document.createElement('p'); meta.className = 'day-record-meta'; meta.textContent = [item.location, item.hours].filter(Boolean).join(' · ');
+				const content = document.createElement('div'); content.className = 'markdown-body'; content.innerHTML = item.detailHtml;
+				record.append(kind, title, meta, content); daySheetEvents.append(record);
 			}
+			daySheet.hidden = false;
+			requestAnimationFrame(() => daySheet.classList.add('is-visible'));
+		}
 
-			const date = new Date(year, month - 1, dayNumber);
-			const key = toKey(date);
-			const dayEvents = eventsByDate[key] || [];
-			const dayLabel = document.createElement('time');
-			dayLabel.dateTime = key;
-			dayLabel.textContent = `${dayNumber}`;
-			cell.append(dayLabel);
-
-			const eventList = document.createElement('div');
-			eventList.className = 'day-events';
-
-			for (const event of dayEvents) {
-				const button = document.createElement('button');
-				button.type = 'button';
-				button.className = `day-event ${event.type}`;
-				button.title = `${typeLabels[event.type]} · ${event.title}`;
-				button.addEventListener('click', () => showDayPopover(key, dayEvents));
-
-				const dot = document.createElement('span');
-				dot.className = 'event-dot';
-
-				const title = document.createElement('span');
-				title.className = 'event-title';
-				title.textContent = event.title;
-
-				const meta = document.createElement('span');
-				meta.className = 'event-meta';
-				meta.textContent = [event.location, event.hours].filter(Boolean).join(' · ');
-
-				button.append(dot, title, meta);
-				eventList.append(button);
+		function renderCalendar() {
+			if (!(calendarGrid instanceof HTMLElement) || !(calendarTitle instanceof HTMLElement) || !(prevButton instanceof HTMLButtonElement) || !(nextButton instanceof HTMLButtonElement) || !monthKeys.length) return;
+			const [year, month] = monthKeys[activeMonthIndex].split('-').map(Number);
+			const firstDay = new Date(year, month - 1, 1); const daysInMonth = new Date(year, month, 0).getDate();
+			const mondayOffset = (firstDay.getDay() + 6) % 7; const totalCells = Math.ceil((mondayOffset + daysInMonth) / 7) * 7;
+			closeDaySheet(); calendarTitle.textContent = monthFormatter.format(firstDay);
+			prevButton.disabled = activeMonthIndex === 0; nextButton.disabled = activeMonthIndex === monthKeys.length - 1; calendarGrid.replaceChildren();
+			for (let index = 0; index < totalCells; index += 1) {
+				const dayNumber = index - mondayOffset + 1;
+				if (dayNumber < 1 || dayNumber > daysInMonth) { const empty = document.createElement('span'); empty.className = 'calendar-day is-empty'; calendarGrid.append(empty); continue; }
+				const key = toKey(new Date(year, month - 1, dayNumber)); const events = eventsByDate[key] || [];
+				const day = document.createElement('button'); day.type = 'button'; day.className = `calendar-day${events.length ? ' has-records' : ''}`;
+				day.disabled = !events.length; day.setAttribute('aria-label', events.length ? `${formatDate(key)}，${events.length} 筆紀錄` : formatDate(key));
+				const number = document.createElement('time'); number.dateTime = key; number.textContent = `${dayNumber}`; day.append(number);
+				if (events.length) {
+					const marks = document.createElement('span'); marks.className = 'calendar-marks';
+					for (const type of [...new Set(events.map((item) => item.type))]) { const mark = document.createElement('i'); mark.className = type; marks.append(mark); }
+					const count = document.createElement('small'); count.textContent = `${events.length} notes`; day.append(marks, count); day.addEventListener('click', () => showDaySheet(key, events));
+				}
+				calendarGrid.append(day);
 			}
-
-			cell.append(eventList);
-			calendarGrid.append(cell);
 		}
-	}
 
-	prevButton?.addEventListener('click', () => {
-		activeMonthIndex = Math.max(0, activeMonthIndex - 1);
+		prevButton?.addEventListener('click', () => { activeMonthIndex = Math.max(0, activeMonthIndex - 1); renderCalendar(); });
+		nextButton?.addEventListener('click', () => { activeMonthIndex = Math.min(monthKeys.length - 1, activeMonthIndex + 1); renderCalendar(); });
+		document.querySelector('[data-day-sheet-close]')?.addEventListener('click', closeDaySheet);
 		renderCalendar();
-	});
-
-	nextButton?.addEventListener('click', () => {
-		activeMonthIndex = Math.min(monthKeys.length - 1, activeMonthIndex + 1);
-		renderCalendar();
-	});
-
-	dayPopoverClose?.addEventListener('click', closeDayPopover);
-
-	dayPopover?.addEventListener('click', (event) => {
-		if (event.target === dayPopover) {
-			closeDayPopover();
-		}
-	});
-
-	document.addEventListener('keydown', (event) => {
-		if (event.key === 'Escape') {
-			closeDayPopover();
-		}
-	});
-
-	renderCalendar();
-</script>
-</Layout>
-
-<style>
-	.pole-home {
-		width: min(100%, 1040px);
-		margin: 0 auto;
-		padding: 36px 24px 72px;
-	}
-
-	header {
-		padding: 88px 0 44px;
-	}
-
-	.back {
-		color: #5f6258;
-		font-weight: 700;
-		text-decoration: none;
-	}
-
-	.eyebrow {
-		margin: 56px 0 14px;
-		color: #b5422a;
-		font-weight: 800;
-		text-transform: uppercase;
-	}
-
-	h1 {
-		margin: 0;
-		font-size: clamp(4rem, 12vw, 9rem);
-		line-height: 0.9;
-	}
-
-	p {
-		max-width: 680px;
-		color: #3d3d38;
-		font-size: 1.2rem;
-		line-height: 1.7;
-	}
-
-	.grid {
-		display: grid;
-		grid-template-columns: repeat(2, minmax(0, 1fr));
-		gap: 14px;
-	}
-
-	.grid a {
-		border: 1px solid #d8d1c1;
-		border-radius: 18px;
-		padding: 22px;
-		background: #fffdf8;
-		color: #171717;
-		text-decoration: none;
-	}
-
-	.grid span {
-		display: block;
-		font-size: 1.35rem;
-		font-weight: 850;
-	}
-
-	.grid small {
-		display: block;
-		margin-top: 12px;
-		color: #656258;
-		font-size: 0.98rem;
-		line-height: 1.6;
-	}
-
-	.grid a:hover,
-	.grid a:focus-visible {
-		border-color: #171717;
-	}
-
-	.calendar {
-		margin-top: 56px;
-	}
-
-	.section-heading {
-		display: flex;
-		gap: 20px;
-		align-items: end;
-		justify-content: space-between;
-		border-top: 2px solid #171717;
-		padding-top: 28px;
-	}
-
-	h2 {
-		margin: 0;
-		font-size: clamp(2rem, 5vw, 4rem);
-		line-height: 1;
-	}
-
-	.legend {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 10px;
-		margin: 24px 0;
-	}
-
-	.legend span {
-		border: 1px solid #171717;
-		border-radius: 999px;
-		padding: 7px 10px;
-		font-size: 0.78rem;
-		font-weight: 900;
-		text-transform: uppercase;
-	}
-
-	.calendar-shell {
-		border: 1px solid #d8d1c1;
-		border-radius: 22px;
-		background: #fffdf8;
-		overflow: hidden;
-	}
-
-	.calendar-toolbar {
-		display: grid;
-		grid-template-columns: 44px minmax(0, 1fr) 44px;
-		align-items: center;
-		border-bottom: 1px solid #d8d1c1;
-	}
-
-	.calendar-toolbar button {
-		width: 44px;
-		height: 44px;
-		border: 0;
-		background: #171717;
-		color: #fff;
-		cursor: pointer;
-		font-size: 1.6rem;
-		font-weight: 900;
-	}
-
-	.calendar-toolbar button:disabled {
-		cursor: not-allowed;
-		opacity: 0.35;
-	}
-
-	h3 {
-		margin: 0;
-		font-size: 1.2rem;
-		text-align: center;
-	}
-
-	.weekday-row,
-	.calendar-grid {
-		display: grid;
-		grid-template-columns: repeat(7, minmax(0, 1fr));
-		grid-template-rows: repeat(6, minmax(118px, 1fr));
-	}
-
-	.weekday-row span {
-		border-bottom: 1px solid #d8d1c1;
-		padding: 10px 8px;
-		color: #68655d;
-		font-size: 0.76rem;
-		font-weight: 900;
-		text-align: center;
-		text-transform: uppercase;
-	}
-
-	.day-cell {
-		display: grid;
-		grid-template-rows: auto minmax(72px, 1fr);
-		min-height: 118px;
-		border-right: 1px solid #e4ddcf;
-		border-bottom: 1px solid #e4ddcf;
-		padding: 8px;
-		background: #f7f5ef;
-	}
-
-	.day-cell:nth-child(7n) {
-		border-right: 0;
-	}
-
-	.day-cell.is-empty {
-		background: #f0ebe0;
-	}
-
-	.day-cell time {
-		color: #5f6258;
-		font-size: 0.82rem;
-		font-weight: 850;
-	}
-
-	.day-events {
-		display: grid;
-		align-content: start;
-		gap: 6px;
-		margin-top: 8px;
-	}
-
-	.day-event {
-		display: grid;
-		grid-template-columns: 8px minmax(0, 1fr);
-		gap: 6px;
-		align-items: start;
-		border: 1px solid #e2d9c8;
-		border-radius: 10px;
-		padding: 6px;
-		background: #fffdf8;
-		color: #171717;
-		cursor: pointer;
-		font: inherit;
-		text-decoration: none;
-		text-align: left;
-	}
-
-	.event-dot {
-		width: 8px;
-		aspect-ratio: 1;
-		border-radius: 50%;
-		margin-top: 0.35em;
-		background: #171717;
-	}
-
-	.event-title {
-		overflow: hidden;
-		font-size: 0.82rem;
-		font-weight: 900;
-		line-height: 1.25;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-	}
-
-	.event-meta {
-		grid-column: 2;
-		overflow: hidden;
-		color: #656258;
-		font-size: 0.74rem;
-		font-weight: 700;
-		line-height: 1.25;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-	}
-
-	.day-event.competition .event-dot,
-	.legend .competition {
-		background: #d94f30;
-	}
-
-	.day-event.practice .event-dot,
-	.legend .practice {
-		background: #2f6f73;
-	}
-
-	.day-event.event .event-dot,
-	.legend .event {
-		background: #6b5bbd;
-	}
-
-	.day-event:hover,
-	.day-event:focus-visible {
-		background: #fff;
-		outline: 2px solid #171717;
-		outline-offset: 0;
-	}
-
-	.day-popover {
-		position: fixed;
-		inset: 0;
-		z-index: 20;
-		display: grid;
-		place-items: center;
-		padding: 24px;
-		background: rgba(23, 23, 23, 0.28);
-	}
-
-	.day-popover[hidden] {
-		display: none;
-	}
-
-	.day-popover-panel {
-		position: relative;
-		width: min(100%, 520px);
-		max-height: min(680px, calc(100svh - 48px));
-		overflow: auto;
-		border: 1px solid #d8d1c1;
-		border-radius: 24px;
-		padding: 22px;
-		background: #fffdf8;
-		box-shadow: 0 24px 70px rgba(23, 23, 23, 0.22);
-	}
-
-	.day-popover-close {
-		position: absolute;
-		top: 14px;
-		right: 14px;
-		width: 34px;
-		height: 34px;
-		border: 1px solid #d8d1c1;
-		border-radius: 50%;
-		background: #f7f5ef;
-		color: #171717;
-		cursor: pointer;
-		font-size: 1.35rem;
-		font-weight: 900;
-		line-height: 1;
-	}
-
-	.day-popover-date {
-		margin: 0 42px 16px 0;
-		color: #5f6258;
-		font-size: 0.92rem;
-		font-weight: 900;
-	}
-
-	.day-popover-events {
-		display: grid;
-		gap: 10px;
-	}
-
-	.popover-event {
-		border-left: 6px solid #171717;
-		border-radius: 16px;
-		padding: 14px 16px;
-		background: #f7f5ef;
-	}
-
-	.popover-event.competition {
-		border-color: #d94f30;
-	}
-
-	.popover-event.practice {
-		border-color: #2f6f73;
-	}
-
-	.popover-event.event {
-		border-color: #6b5bbd;
-	}
-
-	.popover-event-title {
-		display: block;
-		color: #171717;
-		font-size: 1.05rem;
-		font-weight: 950;
-		line-height: 1.35;
-		text-decoration: none;
-	}
-
-	.popover-event-title:hover,
-	.popover-event-title:focus-visible {
-		text-decoration: underline;
-		text-decoration-thickness: 2px;
-		text-underline-offset: 4px;
-	}
-
-	.popover-event p {
-		margin: 6px 0 0;
-		color: #656258;
-		font-size: 0.86rem;
-		font-weight: 750;
-		line-height: 1.45;
-	}
-
-	@media (max-width: 720px) {
-		.grid {
-			grid-template-columns: 1fr;
-		}
-
-		.day-cell {
-			min-height: 104px;
-			padding: 6px;
-		}
-
-		.event-meta {
-			display: none;
-		}
-
-		.day-event {
-			grid-template-columns: 7px minmax(0, 1fr);
-			padding: 5px;
-		}
-	}
-
-	@media (max-width: 460px) {
-		.weekday-row span {
-			font-size: 0;
-		}
-
-		.weekday-row span::first-letter {
-			font-size: 0.72rem;
-		}
-
-		.day-cell {
-			min-height: 72px;
-			padding: 5px;
-		}
-
-		.day-events {
-			display: flex;
-			flex-wrap: wrap;
-			gap: 4px;
-		}
-
-		.day-event {
-			display: block;
-			border: 0;
-			padding: 0;
-			background: transparent;
-		}
-
-		.event-dot {
-			display: block;
-			width: 7px;
-			margin: 0;
-		}
-
-		.event-title,
-		.event-meta {
-			display: none;
-		}
-	}
-</style>
+	</script>
+</PoleLayout>

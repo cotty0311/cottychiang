@@ -1,0 +1,150 @@
+---
+import ChannelKnobs from './ChannelKnobs.astro';
+import CreditsChannel from './CreditsChannel.astro';
+import PhotoChannel from './PhotoChannel.astro';
+import VideoChannel from './VideoChannel.astro';
+
+const { competition, total, formatMoney } = Astro.props;
+---
+
+<div class="retro-television" data-retro-television data-photo-count={competition.photos.length}>
+	<div class="television-case">
+		<div class="television-screen-wrap">
+			<div class="television-screen" data-television-screen>
+				<VideoChannel competition={competition} />
+				<PhotoChannel competition={competition} />
+				<CreditsChannel competition={competition} total={total} formatMoney={formatMoney} />
+				<div class="channel-static" aria-hidden="true"></div>
+				<div class="screen-glass" aria-hidden="true"></div>
+			</div>
+		</div>
+
+		<aside class="television-console">
+			<div class="brand-plate">ORBIT<br /><small>COLOR TV</small></div>
+			<ChannelKnobs />
+			<div class="speaker-grille" aria-hidden="true"></div>
+			<a class="power-return" href="/pole/" aria-label="關閉電視並返回 Pole 房間"><i></i><span>ROOM</span></a>
+		</aside>
+	</div>
+
+	<div class="photo-transport" data-photo-transport hidden>
+		<button type="button" data-photo-prev aria-label="上一張照片">◀◀</button>
+		<button type="button" data-photo-next aria-label="下一張照片">▶▶</button>
+		<output data-photo-progress>01 / {`${competition.photos.length}`.padStart(2, '0')}</output>
+	</div>
+	<div class="tv-feet" aria-hidden="true"><i></i><i></i></div>
+</div>
+
+<script>
+	const televisions = document.querySelectorAll('[data-retro-television]');
+	const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+	televisions.forEach((television) => {
+		if (!(television instanceof HTMLElement)) return;
+		const screen = television.querySelector('[data-television-screen]');
+		const knobs = [...television.querySelectorAll('[data-channel]')];
+		const panels = [...television.querySelectorAll('[data-channel-panel]')];
+		const transport = television.querySelector('[data-photo-transport]');
+		const photos = [...television.querySelectorAll('[data-photo-index]')];
+		const progress = television.querySelector('[data-photo-progress]');
+		const credits = television.querySelector('[data-channel-panel="notes"]');
+		const creditsTrack = television.querySelector('[data-credits-track]');
+		let activeChannel = 'video';
+		let photoIndex = 0;
+		let photoTimer = 0;
+		let photoHoverPaused = false;
+		let creditsPaused = reduceMotion;
+		let creditsFrame = 0;
+		let creditsLastTime = 0;
+		let creditsLastAutomaticScroll = 0;
+		let creditsPosition = 0;
+		let manualPauseTimer = 0;
+
+		function showPhoto(index) {
+			if (!photos.length) return;
+			photoIndex = (index + photos.length) % photos.length;
+			photos.forEach((photo, currentIndex) => photo.classList.toggle('is-current', currentIndex === photoIndex));
+			if (progress instanceof HTMLOutputElement) progress.value = `${`${photoIndex + 1}`.padStart(2, '0')} / ${`${photos.length}`.padStart(2, '0')}`;
+			const nextImage = photos[(photoIndex + 1) % photos.length]?.querySelector('img');
+			if (nextImage instanceof HTMLImageElement) { const preload = new Image(); preload.src = nextImage.src; }
+		}
+
+		function stopPhotoTimer() { window.clearInterval(photoTimer); photoTimer = 0; }
+		function startPhotoTimer() {
+			stopPhotoTimer();
+			if (reduceMotion || activeChannel !== 'photo' || photoHoverPaused) return;
+			photoTimer = window.setInterval(() => showPhoto(photoIndex + 1), 4200);
+		}
+
+		function creditsStep(time) {
+			if (!(credits instanceof HTMLElement) || activeChannel !== 'notes') return;
+			if (!creditsPaused && creditsLastTime) {
+				creditsLastAutomaticScroll = time;
+				creditsPosition += (time - creditsLastTime) * .022;
+				credits.scrollTop = creditsPosition;
+				if (credits.scrollTop + credits.clientHeight >= credits.scrollHeight - 2) creditsPaused = true;
+			}
+			creditsLastTime = time;
+			creditsFrame = requestAnimationFrame(creditsStep);
+		}
+
+		function startCredits() {
+			cancelAnimationFrame(creditsFrame);
+			creditsLastTime = 0;
+			creditsFrame = requestAnimationFrame(creditsStep);
+		}
+
+		function switchChannel(name) {
+			if (name === activeChannel || !(screen instanceof HTMLElement)) return;
+			screen.classList.add('is-switching');
+			window.setTimeout(() => {
+				activeChannel = name;
+				panels.forEach((panel) => {
+					const active = panel.getAttribute('data-channel-panel') === name;
+					if (panel instanceof HTMLElement) { panel.hidden = !active; panel.classList.toggle('is-active', active); }
+				});
+				knobs.forEach((knob) => {
+					const active = knob.getAttribute('data-channel') === name;
+					knob.classList.toggle('is-active', active);
+					knob.setAttribute('aria-pressed', `${active}`);
+				});
+				if (transport instanceof HTMLElement) transport.hidden = name !== 'photo';
+				if (name === 'photo') startPhotoTimer(); else stopPhotoTimer();
+				if (name === 'notes') startCredits(); else cancelAnimationFrame(creditsFrame);
+				screen.classList.remove('is-switching');
+			}, reduceMotion ? 0 : 170);
+		}
+
+		knobs.forEach((knob) => knob.addEventListener('click', () => switchChannel(knob.getAttribute('data-channel'))));
+		television.querySelector('[data-photo-prev]')?.addEventListener('click', () => { showPhoto(photoIndex - 1); startPhotoTimer(); });
+		television.querySelector('[data-photo-next]')?.addEventListener('click', () => { showPhoto(photoIndex + 1); startPhotoTimer(); });
+		television.addEventListener('mouseenter', () => { photoHoverPaused = true; stopPhotoTimer(); });
+		television.addEventListener('mouseleave', () => { photoHoverPaused = false; startPhotoTimer(); });
+
+		if (credits instanceof HTMLElement) {
+			credits.addEventListener('click', (event) => {
+				if ((event.target instanceof HTMLElement) && event.target.closest('button')) return;
+				creditsPaused = !creditsPaused;
+				credits.classList.toggle('is-paused', creditsPaused);
+			});
+			credits.addEventListener('keydown', (event) => {
+				if (event.key === ' ') { event.preventDefault(); creditsPaused = !creditsPaused; credits.classList.toggle('is-paused', creditsPaused); }
+			});
+			credits.addEventListener('scroll', () => {
+				if (performance.now() - creditsLastAutomaticScroll < 100) return;
+				creditsPosition = credits.scrollTop;
+				creditsPaused = true; credits.classList.add('is-paused'); window.clearTimeout(manualPauseTimer);
+				manualPauseTimer = window.setTimeout(() => { if (!reduceMotion && activeChannel === 'notes') { creditsPaused = false; credits.classList.remove('is-paused'); } }, 2800);
+			}, { passive: true });
+		}
+
+		television.querySelector('[data-credits-replay]')?.addEventListener('click', () => {
+			creditsPosition = 0;
+			if (credits instanceof HTMLElement) credits.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
+			creditsPaused = reduceMotion;
+			credits?.classList.toggle('is-paused', creditsPaused);
+		});
+
+		showPhoto(0);
+	});
+</script>

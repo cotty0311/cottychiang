@@ -1,320 +1,37 @@
 ---
-import Layout from '../../../layouts/Layout.astro';
+import PoleLayout from '../../../layouts/PoleLayout.astro';
+import RetroTelevision from '../../../components/pole/competition/RetroTelevision.astro';
+import SceneDecorations from '../../../components/pole/competition/SceneDecorations.astro';
 import { competitions as competitionData } from '../../../data/pole/competitions';
+import '../../../styles/pole-competition-tv.css';
 
 export function getStaticPaths() {
-	return competitionData.map((competition) => ({
-		params: { id: competition.id },
-		props: { competition },
-	}));
+	return competitionData.map((competition) => ({ params: { id: competition.id }, props: { competition } }));
 }
 
-const { competition: rawCompetition } = Astro.props;
-const total = rawCompetition.expenses.reduce((sum, item) => sum + item.amount, 0);
-let start = 0;
-const gradient = rawCompetition.expenses
-	.map((item) => {
-		const end = start + (item.amount / total) * 100;
-		const stop = `${item.color} ${start.toFixed(2)}% ${end.toFixed(2)}%`;
-		start = end;
-		return stop;
-	})
-	.join(', ');
-const topExpense = [...rawCompetition.expenses].sort((a, b) => b.amount - a.amount)[0];
-const competition = {
-	...rawCompetition,
-	total,
-	topExpense,
-	pieStyle: `background: conic-gradient(${gradient});`,
-};
-
+const { competition } = Astro.props;
+const total = competition.expenses.reduce((sum, item) => sum + item.amount, 0);
 const formatMoney = (amount: number) => `NT$${amount.toLocaleString('zh-TW')}`;
 ---
 
-<Layout title={`${competition.name} | Pole Competition`} description={`${competition.name} 的比賽紀錄。`}>
-	<main class="page">
-		<header class="hero">
-			<a class="back" href="/pole/competition/">Competition</a>
-			<p class="eyebrow">{competition.id}</p>
-			<h1>{competition.name}</h1>
+<PoleLayout title={`${competition.name} | Pole Competition`} description={`${competition.name} 的電視比賽紀錄。`}>
+	<main class="competition-tv-scene" data-competition-scene>
+		<img class="tv-room-backdrop" src="/images/pole-room-scene.webp" alt="" aria-hidden="true" />
+		<div class="tv-room-light" aria-hidden="true"></div>
+		<SceneDecorations competition={competition} />
+
+		<header class="tv-scene-header">
+			<div class="on-air"><i></i><span>MEMORY PLAYBACK</span></div>
+			<div class="scene-title"><small>{competition.id.toUpperCase()} · MASTER TAPE</small><h1>{competition.name}</h1></div>
+			<dl>
+				<div><dt>DATE</dt><dd>{competition.date}</dd></div>
+				<div><dt>PLACE</dt><dd>{competition.place}</dd></div>
+				<div><dt>RANK</dt><dd>{competition.rank}</dd></div>
+			</dl>
 		</header>
 
-		<article class="competition" id={competition.id}>
-			<header class="competition-header">
-				<dl class="facts">
-					<div>
-						<dt>時間</dt>
-						<dd>{competition.date}</dd>
-					</div>
-					<div>
-						<dt>地點</dt>
-						<dd>{competition.place}</dd>
-					</div>
-					<div>
-						<dt>名次</dt>
-						<dd>{competition.rank}</dd>
-					</div>
-				</dl>
-			</header>
-
-			<section class="media-section" aria-labelledby={`${competition.id}-video`}>
-				<h2 id={`${competition.id}-video`}>比賽影片</h2>
-				<div class="video-placeholder">
-					<iframe
-						src={competition.videoUrl}
-						title={`${competition.name} YouTube video`}
-						allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-						allowfullscreen
-					></iframe>
-				</div>
-			</section>
-
-			<section class="media-section" aria-labelledby={`${competition.id}-photos`}>
-				<h2 id={`${competition.id}-photos`}>比賽照片</h2>
-				<div class="photo-grid">
-					{competition.photos.map((photo, index) => (
-						<a class="photo-link" href={photo.src} target="_blank">
-							<img src={photo.src} alt={`${photo.alt} ${index + 1}`} loading="lazy" />
-						</a>
-					))}
-				</div>
-			</section>
-
-			<section class="reflection" aria-labelledby={`${competition.id}-reflection`}>
-				<h2 id={`${competition.id}-reflection`}>比賽心得</h2>
-				<p>{competition.reflection}</p>
-			</section>
-
-			<section class="expenses" aria-labelledby={`${competition.id}-expenses`}>
-				<div>
-					<h2 id={`${competition.id}-expenses`}>花費分析</h2>
-					<p>
-						總花費 {formatMoney(competition.total)}，最高項目是
-						<strong>{competition.topExpense.category}</strong>
-						（{formatMoney(competition.topExpense.amount)}）。
-					</p>
-				</div>
-				<div class="chart-wrap">
-					<div class="pie" style={competition.pieStyle}>
-						<span>{formatMoney(competition.total)}</span>
-					</div>
-					<ul class="legend">
-						{competition.expenses.map((item) => (
-							<li>
-								<span style={`background: ${item.color};`}></span>
-								<b>{item.category}</b>
-								<em>{formatMoney(item.amount)}</em>
-							</li>
-						))}
-					</ul>
-				</div>
-			</section>
-		</article>
+		<section class="tv-corner" aria-label={`${competition.name} 復古電視播放場景`}>
+			<RetroTelevision competition={competition} total={total} formatMoney={formatMoney} />
+		</section>
 	</main>
-</Layout>
-
-<style>
-	.page {
-		width: min(100%, 1120px);
-		margin: 0 auto;
-		padding: 36px 24px 88px;
-	}
-
-	.back {
-		color: #5f6258;
-		font-weight: 800;
-		text-decoration: none;
-	}
-
-	.hero {
-		padding: 72px 0 42px;
-	}
-
-	.eyebrow {
-		color: #b5422a;
-		font-weight: 850;
-		text-transform: uppercase;
-	}
-
-	.hero h1 {
-		margin: 0;
-		font-size: clamp(3.4rem, 10vw, 7.5rem);
-		line-height: 0.95;
-	}
-
-	.reflection p,
-	.expenses p {
-		max-width: 720px;
-		color: #3d3d38;
-		font-size: 1.1rem;
-		line-height: 1.75;
-	}
-
-	.competition {
-		border-top: 2px solid #171717;
-		padding: 38px 0 72px;
-	}
-
-	h2 {
-		margin: 0 0 16px;
-		font-size: 1.25rem;
-	}
-
-	.facts {
-		display: grid;
-		grid-template-columns: repeat(3, 1fr);
-		gap: 1px;
-		margin: 0;
-		background: #d8d1c1;
-		border: 1px solid #d8d1c1;
-	}
-
-	.facts div {
-		padding: 16px;
-		background: #fffdf8;
-	}
-
-	dt {
-		color: #68655d;
-		font-size: 0.85rem;
-		font-weight: 800;
-	}
-
-	dd {
-		margin: 8px 0 0;
-		font-size: 1rem;
-		font-weight: 850;
-	}
-
-	.media-section,
-	.reflection,
-	.expenses {
-		margin-top: 42px;
-	}
-
-	.video-placeholder {
-		display: grid;
-		aspect-ratio: 16 / 9;
-		place-items: center;
-		border: 1px solid #d8d1c1;
-		background: #26251f;
-		color: #fff;
-	}
-
-	iframe {
-		width: 100%;
-		height: 100%;
-		border: 0;
-	}
-
-	.photo-grid {
-		display: grid;
-		grid-template-columns: repeat(4, minmax(0, 1fr));
-		gap: 10px;
-	}
-
-	.photo-link {
-		display: block;
-		aspect-ratio: 4 / 5;
-		overflow: hidden;
-		border: 1px solid #d8d1c1;
-		background: #fffdf8;
-	}
-
-	.photo-link img {
-		width: 100%;
-		height: 100%;
-		object-fit: cover;
-		transition: transform 180ms ease;
-	}
-
-	.photo-link:hover img,
-	.photo-link:focus-visible img {
-		transform: scale(1.03);
-	}
-
-	.expenses {
-		display: grid;
-		grid-template-columns: minmax(0, 0.75fr) minmax(360px, 1fr);
-		gap: 28px;
-		align-items: start;
-	}
-
-	.chart-wrap {
-		display: grid;
-		grid-template-columns: 220px minmax(0, 1fr);
-		gap: 24px;
-		align-items: center;
-	}
-
-	.pie {
-		display: grid;
-		width: 220px;
-		aspect-ratio: 1;
-		place-items: center;
-		border-radius: 50%;
-		position: relative;
-	}
-
-	.pie::after {
-		position: absolute;
-		width: 54%;
-		aspect-ratio: 1;
-		border-radius: 50%;
-		background: #f7f5ef;
-		content: "";
-	}
-
-	.pie span {
-		position: relative;
-		z-index: 1;
-		font-weight: 900;
-	}
-
-	.legend {
-		display: grid;
-		gap: 10px;
-		margin: 0;
-		padding: 0;
-		list-style: none;
-	}
-
-	.legend li {
-		display: grid;
-		grid-template-columns: 14px minmax(0, 1fr) auto;
-		gap: 10px;
-		align-items: center;
-	}
-
-	.legend span {
-		width: 14px;
-		aspect-ratio: 1;
-	}
-
-	.legend em {
-		color: #555149;
-		font-style: normal;
-		font-weight: 750;
-	}
-
-	@media (max-width: 880px) {
-		.expenses,
-		.chart-wrap {
-			grid-template-columns: 1fr;
-		}
-
-		.photo-grid {
-			grid-template-columns: repeat(2, minmax(0, 1fr));
-		}
-	}
-
-	@media (max-width: 560px) {
-		.facts {
-			grid-template-columns: 1fr;
-		}
-
-		.pie {
-			width: min(100%, 220px);
-		}
-	}
-</style>
+</PoleLayout>

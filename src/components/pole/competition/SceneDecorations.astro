@@ -1,0 +1,10 @@
+---
+const { competition } = Astro.props;
+---
+
+<div class="scene-decorations" aria-hidden="true">
+	<div class="competition-poster"><small>POLE SPORT</small><b>{competition.name}</b><span>{competition.date}</span></div>
+	<div class="number-tag">{competition.id === 'pso2025' ? '107B' : '109D'}</div>
+	<div class="trophy"><span></span><i></i></div>
+	<div class="video-tape"><b>{competition.id.toUpperCase()}</b><small>MASTER TAPE</small></div>
+</div>

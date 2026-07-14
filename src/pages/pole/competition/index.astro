@@ -1,192 +1,48 @@
 ---
-import Layout from '../../../layouts/Layout.astro';
+import PoleLayout from '../../../layouts/PoleLayout.astro';
 import { competitions } from '../../../data/pole/competitions';
+import '../../../styles/pole-competition.css';
 ---
 
-<Layout title="Pole Competition | Cotty Chiang" description="Cotty Chiang 的鋼管比賽紀錄。">
-	<main class="page">
-		<header class="hero">
-			<a class="back" href="/pole/">Pole</a>
-			<p class="eyebrow">Competition</p>
-			<h1>比賽紀錄</h1>
-			<p>點進每張比賽卡，看影片、照片、資訊、心得和花費分析。</p>
+<PoleLayout title="Pole Competition | Cotty Chiang" description="Cotty Chiang 的鋼管比賽錄影收藏。">
+	<main class="competition-library">
+		<img class="library-room" src="/images/pole-room-scene.webp" alt="" aria-hidden="true" />
+		<div class="library-shade" aria-hidden="true"></div>
+
+		<header class="library-header">
+			<a href="/pole/">← 回到 Pole 房間</a>
+			<div><p>MEMORY WALL · COMPETITION TAPES</p><h1>比賽錄影帶</h1></div>
+			<span>選一台電視，重新播放那一次舞台。</span>
 		</header>
 
-		<section class="cards" aria-label="Competition list">
-			{competitions.map((competition) => (
-				<a class="competition-card" href={`/pole/competition/${competition.id}/`}>
-					<div class="slideshow" aria-hidden="true">
-						{competition.featuredPhotos.map((photo, index) => (
-							<img
-								src={photo.src}
-								alt=""
-								loading={index === 0 ? 'eager' : 'lazy'}
-								style={`--index: ${index}; --count: ${competition.featuredPhotos.length};`}
-							/>
-						))}
-						{competition.medal === 'bronze' && <span class="medal">銅牌</span>}
-					</div>
-					<div class="card-body">
-						<div>
-							<p>{competition.id}</p>
-							<h2>{competition.name}</h2>
+		<section class="television-shelf" aria-label="比賽列表">
+			{competitions.map((competition, competitionIndex) => (
+				<a class:list={['memory-tv', `tv-${competitionIndex + 1}`]} href={`/pole/competition/${competition.id}/`}>
+					<div class="tv-antenna" aria-hidden="true"><i></i><i></i></div>
+					<div class="tv-case">
+						<div class="tv-preview">
+							{competition.featuredPhotos.map((photo, index) => (
+								<img
+									src={photo.src}
+									alt=""
+									loading={index === 0 ? 'eager' : 'lazy'}
+									style={`--index: ${index}; --count: ${competition.featuredPhotos.length};`}
+								/>
+							))}
+							<span class="tv-scanlines"></span>
 						</div>
-						<time>{competition.date}</time>
+						<div class="tv-controls" aria-hidden="true">
+							<i></i><i></i><span>PLAY</span>
+						</div>
+					</div>
+					<div class="tape-label">
+						<small>ARCHIVE {`${competitionIndex + 1}`.padStart(2, '0')}</small>
+						<h2>{competition.name}</h2>
+						<p>{competition.date} · {competition.place}</p>
+						<b>{competition.rank}{competition.medal === 'bronze' ? ' · 銅牌' : ''}</b>
 					</div>
 				</a>
 			))}
 		</section>
 	</main>
-</Layout>
-
-<style>
-	.page {
-		width: min(100%, 1120px);
-		margin: 0 auto;
-		padding: 36px 24px 88px;
-	}
-
-	.back {
-		color: #5f6258;
-		font-weight: 800;
-		text-decoration: none;
-	}
-
-	.hero {
-		padding: 72px 0 42px;
-	}
-
-	.eyebrow {
-		color: #b5422a;
-		font-weight: 850;
-		text-transform: uppercase;
-	}
-
-	h1 {
-		margin: 0;
-		font-size: clamp(3.4rem, 10vw, 7.5rem);
-		line-height: 0.95;
-	}
-
-	.hero p {
-		max-width: 720px;
-		color: #3d3d38;
-		font-size: 1.1rem;
-		line-height: 1.75;
-	}
-
-	.cards {
-		display: grid;
-		grid-template-columns: repeat(2, minmax(0, 1fr));
-		gap: 18px;
-	}
-
-	.competition-card {
-		display: grid;
-		overflow: hidden;
-		border: 1px solid #d8d1c1;
-		background: #fffdf8;
-		color: #171717;
-		text-decoration: none;
-	}
-
-	.slideshow {
-		position: relative;
-		aspect-ratio: 4 / 5;
-		overflow: hidden;
-		background: #26251f;
-	}
-
-	.slideshow img {
-		position: absolute;
-		inset: 0;
-		width: 100%;
-		height: 100%;
-		object-fit: cover;
-		opacity: 0;
-		animation: fade-photo calc(var(--count) * 3s) linear infinite;
-		animation-delay: calc(var(--index) * 3s);
-	}
-
-	@keyframes fade-photo {
-		0%,
-		100% {
-			opacity: 0;
-		}
-
-		5%,
-		16% {
-			opacity: 1;
-		}
-
-		22% {
-			opacity: 0;
-		}
-	}
-
-	.medal {
-		position: absolute;
-		top: 16px;
-		right: 16px;
-		z-index: 1;
-		border: 1px solid rgba(40, 27, 18, 0.35);
-		border-radius: 999px;
-		padding: 8px 12px;
-		background: #b87333;
-		color: #fff8ec;
-		font-size: 0.88rem;
-		font-weight: 950;
-		box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
-	}
-
-	.card-body {
-		display: flex;
-		gap: 18px;
-		align-items: end;
-		justify-content: space-between;
-		padding: 18px;
-	}
-
-	.card-body p {
-		margin: 0 0 8px;
-		color: #b5422a;
-		font-size: 0.82rem;
-		font-weight: 850;
-		text-transform: uppercase;
-	}
-
-	h2 {
-		margin: 0;
-		font-size: clamp(1.8rem, 4vw, 3rem);
-		line-height: 1;
-	}
-
-	time {
-		color: #5f6258;
-		font-weight: 850;
-		white-space: nowrap;
-	}
-
-	.competition-card:hover,
-	.competition-card:focus-visible {
-		border-color: #171717;
-		outline: 2px solid #171717;
-		outline-offset: 0;
-	}
-
-	@media (prefers-reduced-motion: reduce) {
-		.slideshow img {
-			animation: none;
-		}
-
-		.slideshow img:first-child {
-			opacity: 1;
-		}
-	}
-
-	@media (max-width: 760px) {
-		.cards {
-			grid-template-columns: 1fr;
-		}
-	}
-</style>
+</PoleLayout>

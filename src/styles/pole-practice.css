@@ -1,0 +1,103 @@
+@font-face {
+	font-family: 'Laura Handwriting Local';
+	src: local('壱城ラウラfont'), local('ItijyouRaurafont Med'), local('ItijyouRaurafont Medium');
+	font-display: swap;
+}
+
+.practice-archive,
+.practice-archive * { box-sizing: border-box; }
+
+.practice-archive { min-height: 100svh; padding: 28px clamp(14px, 4vw, 56px) 70px; background: radial-gradient(circle at 70% 0, rgba(109,69,126,.14), transparent 34%); }
+.practice-header { display: grid; grid-template-columns: minmax(140px,.45fr) minmax(300px,1fr) auto; gap: 30px; align-items: end; width: min(100%,1220px); margin: 0 auto 26px; }
+.desk-return { align-self: start; color: #b9adba; font: 500 .62rem 'DM Mono', monospace; letter-spacing: .09em; text-decoration: none; text-transform: uppercase; }
+.desk-return:hover,
+.desk-return:focus-visible { color: white; outline: none; }
+.practice-title p { margin: 0 0 8px; color: #e4ae6c; font: 500 .57rem 'DM Mono', monospace; letter-spacing: .18em; }
+.practice-title h1 { margin: 0; color: #f2ece3; font: 700 clamp(1.8rem,4vw,3.25rem) 'Syne', sans-serif; letter-spacing: -.045em; }
+.practice-title > span { display: block; max-width: 580px; margin-top: 9px; color: #9f95a4; font-size: .8rem; line-height: 1.65; }
+.practice-summary { display: flex; gap: 1px; margin: 0; overflow: hidden; border: 1px solid rgba(255,255,255,.1); border-radius: 10px; background: rgba(255,255,255,.1); }
+.practice-summary div { min-width: 74px; padding: 10px 13px; background: rgba(11,8,15,.75); }
+.practice-summary dt { color: #8f8593; font-size: .58rem; }
+.practice-summary dd { margin: 3px 0 0; color: #eee8df; font: 700 1.15rem 'DM Mono', monospace; font-variant-numeric: tabular-nums; }
+
+.practice-desk { position: relative; width: min(100%,1220px); min-height: 65vh; margin: 0 auto; overflow: hidden; border-radius: 16px 16px 4px 4px; padding: clamp(18px,4vw,52px) clamp(12px,4vw,56px) 58px clamp(36px,7vw,94px); background: linear-gradient(105deg, rgba(255,255,255,.035), transparent 28%, rgba(0,0,0,.15)), repeating-linear-gradient(87deg, rgba(45,20,13,.12) 0 2px, transparent 2px 44px), #3c2119; box-shadow: inset 0 22px 50px rgba(0,0,0,.34), 0 25px 80px rgba(0,0,0,.42); }
+.desk-grain { position: absolute; inset: 0; pointer-events: none; background: repeating-radial-gradient(ellipse at 10% 30%, transparent 0 18px, rgba(255,255,255,.018) 19px 20px); opacity: .8; }
+.practice-ledger { position: relative; z-index: 2; border-radius: 4px 12px 12px 4px; padding: 18px; background: #d8cbb5; color: #2f2e36; box-shadow: -9px 15px 35px rgba(0,0,0,.48), inset 18px 0 30px rgba(69,46,31,.1); transform: perspective(1500px) rotateX(1deg); }
+.practice-ledger::before { position: absolute; inset: 0; pointer-events: none; background: repeating-linear-gradient(0deg, transparent 0 29px, rgba(73,82,112,.035) 30px); content: ''; }
+.ledger-spine { position: absolute; z-index: 4; left: clamp(20px,5vw,68px); top: 8%; bottom: 8%; display: flex; flex-direction: column; justify-content: space-around; }
+.ledger-spine span { display: block; width: 54px; height: 12px; border: 3px solid #897263; border-left: 0; border-radius: 0 8px 8px 0; background: linear-gradient(#4d4038,#9b8471,#4c3f37); box-shadow: 3px 3px 6px rgba(0,0,0,.35); }
+
+.practice-ledger details { position: relative; border: 0; border-radius: 0; background: transparent; overflow: visible; }
+.practice-ledger summary { position: relative; z-index: 2; display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 18px; align-items: center; border: 0; border-bottom: 1px solid rgba(49,43,39,.18); padding: 15px 16px; cursor: pointer; list-style: none; }
+.practice-ledger summary::-webkit-details-marker { display: none; }
+.practice-ledger summary:focus-visible { outline: 2px dashed #79576f; outline-offset: -4px; }
+.practice-ledger summary span { font-weight: 700; }
+.practice-ledger summary span::before { display: inline-block; width: 17px; margin-right: 8px; color: #875b77; content: '+'; }
+.practice-ledger details[open] > summary span::before { content: '−'; }
+.practice-ledger summary small { color: #777069; font: 500 .62rem 'DM Mono', monospace; text-align: right; }
+.practice-ledger summary small b { display: inline-block; margin-left: 10px; color: #6f5068; }
+.ledger-season > summary { margin: 5px 0; border-radius: 5px; background: #312330; color: #eee5da; }
+.ledger-season > summary span { font: 700 1rem 'Syne', sans-serif; }
+.ledger-season > summary span i { display: inline-block; margin-right: 12px; color: #d5a76e; font: normal 500 .5rem 'DM Mono', monospace; letter-spacing: .1em; }
+.ledger-season > summary small { color: #b9acb2; }
+.ledger-season-body { padding: 8px 10px 16px; }
+.ledger-month { margin: 8px 0; border-left: 3px solid rgba(112,75,101,.35) !important; }
+.ledger-month > summary span { font-family: 'Syne',sans-serif; }
+.ledger-month-body { padding: 5px 8px 12px 22px; }
+.ledger-week { margin: 7px 0; border: 1px dashed rgba(68,56,52,.2) !important; border-radius: 5px !important; }
+.ledger-week > summary { padding: 11px 13px; }
+.ledger-week > summary span { font-size: .78rem; }
+.ledger-entries { display: grid; gap: 13px; padding: 12px; }
+.ledger-entry { position: relative; display: grid; grid-template-columns: 190px minmax(0,1fr); gap: 22px; overflow: hidden; border: 1px solid rgba(73,58,49,.18); border-radius: 2px 8px 8px 2px; padding: 20px; background: linear-gradient(98deg,#eee7d7,#e6dcc9); box-shadow: 0 7px 14px rgba(66,44,29,.1); }
+.ledger-entry::before { position: absolute; left: 0; top: 0; bottom: 0; width: 5px; background: #9c6d8c; content: ''; }
+.entry-heading time { color: #80596f; font: 500 .58rem 'DM Mono', monospace; }
+.entry-heading h2 { margin: 10px 0 7px; color: #302d36; font: 700 1.05rem 'Syne',sans-serif; letter-spacing: -.02em; }
+.entry-heading p { margin: 0; color: #716a65; font-size: .68rem; }
+.entry-content { min-width: 0; color: #3a3537; font: 1rem/1.85 'Laura Handwriting Local','Klee One','KaiTi TC',cursive; overflow-wrap: anywhere; }
+.entry-content > :first-child { margin-top: 0; }
+.entry-content > :last-child { margin-bottom: 0; }
+.entry-content h1,.entry-content h2,.entry-content h3,.entry-content h4 { margin: 1.15em 0 .45em; color: #3b2f3a; font-family: inherit; line-height: 1.3; }
+.entry-content h1 { font-size: 1.5rem; }.entry-content h2 { font-size: 1.3rem; }.entry-content h3,.entry-content h4 { font-size: 1.12rem; }
+.entry-content p { margin: .6em 0; }
+.entry-content ul,.entry-content ol { margin: .7em 0; padding-left: 1.4em; }
+.entry-content li { margin: .18em 0; }
+.entry-content blockquote { margin: .8em 0; border-left: 3px solid #9c6d8c; padding-left: 1em; color: #675763; }
+.entry-content a { color: #694b73; font-weight: 700; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+.entry-content code { border-radius: 3px; padding: .1em .3em; background: rgba(71,49,67,.1); font: .82em 'DM Mono',monospace; }
+.entry-content pre { max-width: 100%; overflow-x: auto; border-radius: 6px; padding: 13px; background: #312c32; color: #f2eadf; white-space: pre; }
+.entry-content pre code { padding: 0; background: transparent; color: inherit; }
+.entry-content hr { height: 1px; margin: 1.3em 0; border: 0; background: rgba(56,48,45,.25); }
+.entry-content img { display: block; width: auto; max-width: 100%; max-height: 520px; margin: 1em auto; border: 7px solid #f4ecdd; box-shadow: 0 8px 18px rgba(50,33,25,.18); object-fit: contain; }
+.entry-content input[type='checkbox'] { margin-right: .45em; accent-color: #8f627f; }
+
+@media (max-width:800px) {
+	.practice-header { grid-template-columns: 1fr auto; }
+	.desk-return { grid-column: 1 / -1; }
+	.practice-title { grid-column: 1; }
+	.practice-summary { grid-column: 2; }
+	.ledger-entry { grid-template-columns: 1fr; }
+}
+
+@media (max-width:560px) {
+	.practice-archive { padding: 18px 8px 40px; }
+	.practice-header { display: block; padding: 0 8px; }
+	.practice-title { margin: 38px 0 18px; }
+	.practice-title h1 { font-size: 1.85rem; }
+	.practice-summary { width: 100%; margin-bottom: 18px; }
+	.practice-summary div { flex: 1; min-width: 0; }
+	.practice-desk { padding: 18px 6px 30px 24px; border-radius: 10px; }
+	.ledger-spine { left: 6px; }
+	.ledger-spine span { width: 30px; height: 9px; }
+	.practice-ledger { padding: 8px; }
+	.practice-ledger summary { grid-template-columns: 1fr; gap: 5px; }
+	.practice-ledger summary small { text-align: left; }
+	.ledger-month-body { padding-left: 6px; }
+	.ledger-entries { padding: 7px; }
+	.ledger-entry { gap: 15px; padding: 17px 14px; }
+	.entry-content { font-size: .96rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.practice-ledger,
+	.ledger-entry { transform: none; }
+}

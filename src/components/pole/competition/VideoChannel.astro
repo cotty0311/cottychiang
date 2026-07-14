@@ -1,0 +1,12 @@
+---
+const { competition } = Astro.props;
+---
+
+<section class="tv-channel video-channel is-active" data-channel-panel="video" aria-label="比賽影片">
+	<iframe
+		src={competition.videoUrl}
+		title={`${competition.name} YouTube 比賽影片`}
+		allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+		allowfullscreen
+	></iframe>
+</section>

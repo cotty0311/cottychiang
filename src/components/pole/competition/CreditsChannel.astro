@@ -1,0 +1,41 @@
+---
+const { competition, total, formatMoney } = Astro.props;
+---
+
+<section class="tv-channel credits-channel" data-channel-panel="notes" aria-label="心得與財務片尾字幕" hidden tabindex="0">
+	<div class="credits-track" data-credits-track>
+		<p class="credits-overline">COTTY CHIANG PRESENTS</p>
+		<h2>{competition.name}</h2>
+		<p class="credits-subtitle">A POLE COMPETITION MEMORY</p>
+
+		<dl class="credit-facts">
+			<div><dt>DATE</dt><dd>{competition.date}</dd></div>
+			<div><dt>PLACE</dt><dd>{competition.place}</dd></div>
+			<div><dt>RANK</dt><dd>{competition.rank}</dd></div>
+		</dl>
+
+		<section class="credit-block">
+			<p>REFLECTION</p>
+			<h3>比賽心得</h3>
+			<div class="reflection-copy">{competition.reflection}</div>
+		</section>
+
+		<section class="credit-block finance-credits">
+			<p>PRODUCTION COSTS</p>
+			<h3>花費報告</h3>
+			<ul>
+				{competition.expenses.map((item) => (
+					<li><span>{item.category}</span><i></i><b>{formatMoney(item.amount)}</b></li>
+				))}
+			</ul>
+			<div class="credit-total"><span>TOTAL</span><b>{formatMoney(total)}</b></div>
+		</section>
+
+		<div class="credits-end">
+			<p>THE END</p>
+			<span>{competition.name} · {competition.date}</span>
+			<button type="button" data-credits-replay>從頭播放</button>
+		</div>
+	</div>
+	<span class="credits-pause-hint" data-credits-hint>Click / Space to pause</span>
+</section>
